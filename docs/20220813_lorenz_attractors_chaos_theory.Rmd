@@ -1,0 +1,93 @@
+---
+title: "Lorenz Attractors"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 12.5
+      fig_width: 12.5
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+# Load libraries
+
+```{r}
+suppressPackageStartupMessages( {
+  library(deSolve)
+} )
+```
+
+## Background
+
+# Equations
+
+Ref.: https://www.sixhat.net/lorenz-attractor-in-r.html
+
+The three equations that govern the behavior of Lorenz attractors are:
+
+1. $\dfrac{dx}{dt}=\sigma (y-x)$
+
+2. $\dfrac{dy}{dt}=x(\rho - z)-y$
+
+3. $\dfrac{dz}{dt}=xy - \beta z$,
+
+where usually $\sigma=10$, $\rho=28$, $\beta = 8/3$.
+
+# Model 
+
+## Parameters
+
+So let's define the parameters, the initial state of the system and the equations in the form of a function called Lorenz
+
+```{r}
+parameters <- c(s = 10, r = 28, b = 8/3)
+state <- c(X = 0, Y = 1, Z = 1)
+ 
+Lorenz <- function(t, state, parameters) {
+    with( as.list(c(state, parameters) ), {
+        dX <- s * (Y - X)
+        dY <- X * (r - Z) - Y
+        dZ <- X * Y - b * Z
+        list( c(dX, dY, dZ) )
+    } )
+}
+```
+
+## Plot
+
+We can now start processing this and plotting it.
+
+```{r}
+times <- seq(0, 50, by = 0.01)
+out <- ode(y = state, times = times, func = Lorenz, parms = parameters)
+ 
+par( oma = c(0, 0, 3, 0) )
+plot(out, xlab = "time", ylab = "-")
+plot(out[, "Y"], out[, "Z"], pch = ".", type = "l")
+mtext(outer = TRUE, side = 3, "Lorenz model", cex = 1.5)
+```
+
+The above example is mainly copied from the the deSolve package documentation that uses the same example. What I'd like to point out in this is how simple it is to solve and plot a system of differential equations in R. The language is simple and clear and it is much more practical than implementing everything from scratch.
+
+
+
+
+
+
+

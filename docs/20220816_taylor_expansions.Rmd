@@ -1,0 +1,274 @@
+---
+title: "Taylor Series"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 6.5
+      fig_width: 10
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+# Setup
+
+## Load libraries
+
+```{r}
+suppressPackageStartupMessages( {
+  library(RColorBrewer)
+} )
+```
+
+## Color palettes
+
+```{r}
+pal <- brewer.pal(11, name="Spectral") 
+cl1 <- "red4"
+cl2 <- "peru"
+```
+
+# Introduction 
+
+Taylor expansions allow us to approximate solutions/functions when $x\rightarrow 0$. Largely about taking non-polynomial functions and finding polynomials that approximate them near some angle. Why do this? Polynomials are *much* easier to deal with than other functions, such as cosine, etc. They are easier to compute derivatives, integrals.
+
+## General form
+
+At $x-0$:
+
+$P(x)=f(0) + \dfrac{df}{dx}(0)\dfrac{x^1}{1!} + \dfrac{d^2f}{dx^2}(0)\dfrac{x^2}{2!} + \dfrac{d^3f}{dx^3}(0)\dfrac{x^3}{3!} + \dfrac{d^4f}{dx^4}(0)\dfrac{x^4}{4!} + ...$
+
+At any point $x=a$:
+
+$P(x)=f(a) + \dfrac{df}{dx}(a)\dfrac{(x-a)^1}{1!} + \dfrac{d^2f}{dx^2}(a)\dfrac{(x-a)^2}{2!} + \dfrac{d^3f}{dx^3}(a)\dfrac{(x-a)^3}{3!} + \dfrac{d^4f}{dx^4}(a)\dfrac{(x-a)^4}{4!} + ...$
+
+**Definitions**:
+
+- **Taylor series**: the infinite sum, including *all* polynomial terms
+
+- **Convergent series**: converges to the actual solution of the original function
+
+- **Divergent series**: after reaching a certain threshold, will never converge and rather overshoot back and forth
+
+  + **Radius of convergence**: the aforementioned threshold before which the series converges but after which the series diverges
+
+# Practice
+
+The easiest example of a Taylor series is $e^x$, since $\dfrac{d(e^x)}{dx}=e^x$, i.e. its derivative is the same as the original function! So using the general form above...
+
+$P(e^x)=1 + x + \dfrac{1}{2}x^2 + \dfrac{1}{6}x^3 + \dfrac{1}{24}x^4 + ...$
+
+For $e^{-x^2}$,
+
+$P(e^{-x^2})=1 + -2(\dfrac{1}{2})x^2 + 0x^3 + \dfrac{1}{2}x^4 + ...$
+
+1. $e^{0^2}=1$
+2. ...
+
+## Example: $e^{-x^2}$, $e^x$
+
+```{r, fig.width=16}
+e <- exp(1)
+
+test_fun <- function(x) {
+  e <- exp(1)
+  y <- e^(-x^2)
+  return(y)
+}
+
+tay_fun <- function(x) {
+  e <- exp(1)
+  y <- 1-(x^2)+0.5*x^4
+  return(y)
+}
+
+test_fun2 <- function(x) {
+  e <- exp(1)
+  y <- e^x
+  return(y)
+}
+
+tay_fun2 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)
+  return(y)
+}
+
+tay_fun2_2 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)+((1/6)*(x^3))
+  return(y)
+}
+
+tay_fun2_3 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)+((1/6)*(x^3))+((1/24)*(x^4))
+  return(y)
+}
+
+x <- seq(-5, 5, by=0.1)
+
+par(mfrow=c(1,2))
+
+plot(x, test_fun2(x), type="l", col=cl1, lwd=3, ylim=c(-0.5,2))
+lines(x, tay_fun2(x), col=pal[3], lwd=2)
+lines(x, tay_fun2_2(x), col=pal[5], lwd=2)
+lines(x, tay_fun2_3(x), col=pal[8], lwd=2)
+abline(h=0, v=0, lwd=4)
+
+plot(x, test_fun(x), type="l", col=cl1, lwd=3, ylim=c(-0.5,2))
+lines(x, tay_fun(x), col=cl2, lwd=2)
+abline(h=0, v=0, lwd=4)
+
+```
+
+## Example: $y=cosx$
+
+Cosine form:
+
+$cos(x)=1$ at $x=0$. Derivative is $\dfrac{d(cos)}{dx}(0)=-sin(0)=0$.
+
+Polynomial form:
+
+Generally, $P(x)=c_0 + c_1x + c_2x^2$. We know that $cos(0)=1$; therefore, $c_0$, giving us $P(x)=1 + c_1x + c_2x^2$. Deriving that expression, we get $\dfrac{dP}{dx}(0)=c_1 + 2c_20=c_1$.
+
+$c_0=1$
+$c_1=0$
+
+Now we have $P(x)=1 + 0x + c_2x^2$ and are free to change $x_2$ so we can take advantage of the fact that the derivative $-sinx$ curves downward upon moving away from 0, i.e. it has a negative second derivative. Even though the rate of change is 0 at that point, the rate of change itself is decreasing at that point. <mark >Making sure that the second derivatives match will ensure that the original curve and polynomial curve at the same rate</mark>. 
+
+$\dfrac{d^2P}{dx^2}(x)=2c_2=-1$
+$c_2=-1/2$
+
+Steps:
+
+1. *Original*: $cos(x) \xrightarrow {x \rightarrow 0}1$; *polynomial*: $P(x)=1 + 0x + c_2x^2$
+  + 1st term is 1 b/c cos(0) is 1
+  + 2nd term is 0 b/c -sin(0) is 0
+2. *1st derivative*: $-sin(0)=0$; *polynomial*: $\dfrac{dP}{dx}(x)=0 + 2c_2x$
+3. *2nd derivative*: $-cos(0)=-1$; *polynomial*: $\dfrac{d^2P}{dx^2}(x)=2c_2$
+
+**Polynomial**: $P(x)=1 - \dfrac{1}{2}x^2$
+
+```{r}
+## first and second derivatives
+D( expression( cos(x) ), "x" ) # -sinx
+D( expression( -sin(x) ), "x" ) # -cosx
+
+## set colors
+pal <- brewer.pal(8, name="Spectral")
+cl1 <- "red4"
+cl2 <- "peru"
+
+## initiate x
+x <- seq(-10,10,by=0.2)
+
+## plot
+plot(x, cos(x), type="l", col=cl1, lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=cl2)
+lines(x, -cos(x), col="wheat")
+abline(h=0, v=0, lwd=2)
+abline(v=pi, col="navy", lty=2)
+abline(v=-pi, col="navy", lty=2)
+
+# original solution is 1
+abline(h=1, col="navy", lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col="blue", lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col="lightblue", lwd=2)
+abline(a=0, b=-1, col="lightblue", lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col="orange", lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col="orange3", lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col="orange4", lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+```
+
+Now let's try with brewer palette colors...
+
+```{r}
+## plot
+n <- 11
+pal <- brewer.pal(11, name="Spectral")
+plot(x, cos(x), type="l", col=pal[[7]], lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=pal[[6]])
+lines(x, -cos(x), col=pal[[5]])
+abline(h=0, v=0, lwd=2)
+abline(v=pi, lty=2)
+abline(v=-pi, lty=2)
+
+# original solution is 1
+abline(h=1, col=pal[[n]], lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col=pal[[n-1]], lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col=pal[[n-2]], lwd=2)
+abline(a=0, b=-1, col=pal[[n-2]], lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col=pal[[1]], lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col=pal[[2]], lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col=pal[[3]], lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+
+## plot
+n <- 11
+pal <- brewer.pal(n, name="BrBG")
+plot(x, cos(x), type="l", col=pal[[7]], lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=pal[[6]])
+lines(x, -cos(x), col=pal[[5]])
+abline(h=0, v=0, lwd=2)
+abline(v=pi, lty=2)
+abline(v=-pi, lty=2)
+
+# original solution is 1
+abline(h=1, col=pal[[n]], lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col=pal[[n-1]], lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col=pal[[n-2]], lwd=2)
+abline(a=0, b=-1, col=pal[[n-2]], lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col=pal[[1]], lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col=pal[[2]], lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col=pal[[3]], lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+
+```
+
+So how good is this approximation? Let's try it out for, say, 0.1...
+
+```{r}
+cos(0.1)
+1-0.5*(0.1^2)
+```
+
+Pretty damn close!
+
+
+
+
+
+
+

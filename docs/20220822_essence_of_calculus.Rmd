@@ -1,0 +1,672 @@
+---
+title: "Essence of Calculus"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 6.5
+      fig_width: 10
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+# Setup
+
+## Load libraries
+
+```{r}
+suppressPackageStartupMessages( {
+  library(RColorBrewer)
+} )
+```
+
+## Color palettes
+
+```{r}
+pal <- brewer.pal(11, name="Spectral") 
+cl1 <- "red4"
+cl2 <- "peru"
+```
+
+# Fundamental theorem of calculus
+
+If $f(x)$ is continuous over interval $[a,b]$, and $F(x)$ is defined as $F(x)=\int_a^x f(t)dt$, then $F'(x)=f(x)$ over $[a,b]$.
+
+$dx=\Delta x \rightarrow 0$
+
+$\dfrac{d}{dx} \int_a^xf(t)dt=f(x)$
+
+$\int_a^b f(x)dx=F(B)-F(A)$ where $F(X)=\int f(x)$
+
+# Derivatives
+
+## General form of a derivative
+
+$\dfrac{ds}{dt}(s)=\dfrac{s(t+dt)-s(t)}{dt}$ as $dt \rightarrow 0$, i.e. we are taking tinier and tinier steps to be able to approximate an "instantaneous rate". Posing the problem as a limit prevents us from stumbling into paradoxes due to the seemingly counterintuitive phrase "instantaneous rate" since a rate by definition requires a rate of change between two different points. 
+
+## Rules
+
+### Constant rule
+
+$\dfrac{d}{dx}(c)=0$
+
+### Constant multiple rule
+
+$\dfrac{d}{dx}(cf(x))=cf'(x)$
+
+### Power rule
+
+$\dfrac{d}{dx}(x^n)=nx^{x-1}$
+
+### Sum rule
+
+$\dfrac{d}{dx}(f(x)+g(x))=f'(x)+g'(x)$
+
+### Product rule
+
+"Left d(Right) + Right d(Left)"
+
+$\dfrac{d}{dx}(f(x)g(x))=f(x)g'(x) + f'(x)g(x)$
+
+### Quotient rule
+
+$\dfrac{d}{dx}[\dfrac{f(x)}{g(x)}]=\dfrac{g(x)f'(x)-f(x)g'(x)}{[g'(x)]^2}$
+
+### Chain rule
+
+$\dfrac{d}{dx}(g(h(x))=\dfrac{dg}{dh}\dfrac{dh}{dx}=\dfrac{dg}{dx}$
+
+## Exponentials and Euler's number
+
+Remember this fundamental rule of exponents...
+
+$2^{a+b}=2^a2^b$
+
+Let's say we have a population that is exponentially growing with the doubling function $M(t)=2^t$.
+
+Then,
+
+$\dfrac{dM}{dt}(t)=\dfrac{2^{t+dt}-2^t}{dt}=\dfrac{2^t2^{dt}-2^t}{dt}=2^t[\dfrac{2^{dt}-1}{dt}]$. Since $dt \rightarrow 0$, we can plug in smaller and smaller values of $dt$ into the second part of the equation $\dfrac{2^{dt}-1}{dt}$ and we will see that we converge at a constant...
+
+```{r}
+dt <- 0.01 
+(2^dt-1)/dt
+dt <- 1e-4 
+(2^dt-1)/dt
+dt <- 1e-6 
+(2^dt-1)/dt
+dt <- 1e-10 
+log(2, exp(1))
+( round( (2^dt-1)/dt, 5) )==round( log(2, exp(1)), 5 )
+
+0.6931478*3
+2^3
+
+dt <- 0.01 
+(8^dt-1)/dt
+dt <- 1e-4 
+(8^dt-1)/dt
+dt <- 1e-6 
+(8^dt-1)/dt
+dt <- 1e-10 
+(8^dt-1)/dt
+```
+
+So this is telling us that the derivative of $2^t$ is just itself times a constant, i.e. $\dfrac{d(2^t)}{dt}=c2^t$.
+
+Q: Is there a base where that proportionality constant is 1? 
+A: Yes! Euler's number
+
+```{r}
+e <- exp(1)
+dt <- 0.01 
+(e^dt-1)/dt
+dt <- 1e-4 
+(e^dt-1)/dt
+dt <- 1e-6 
+(e^dt-1)/dt
+dt <- 1e-10 
+(e^dt-1)/dt
+```
+
+This is what defines the number e. The fact that, when raised to an independent variable, it is a derivative of itself.
+
+$\dfrac{d(e^x)}{dx}=e^x$, or, more generally...
+
+$\dfrac{d(e^{cx})}{dx}=ce^{cx}$
+
+It's a bit like asking "Why does pi happen to be the ratio of the circumference of a circle to its diameter?" This is circular, because this is what *defines* this value.
+
+<mark >All exponential functions are proportional to their own derivative, but e alone is equal to its own derivative</mark>.
+
+$2=e^{ln(2)}$ (by definition), i.e. `ln(x)` is the inverse of `e^x`.
+$2^t=e^{ln(2)t}$
+
+$\dfrac{2^x-1}{x}=ln(2)$ for small $x \rightarrow 0$.
+
+SO, in conclusion, we have:
+
+$\dfrac{d(2^x)}{dx}=2^xln(2)$
+
+Try to write anything in exponential form with $e$ as the base to make the intuition easier!
+
+$a^x=e^{cx}$. 
+
+E.g. $\dfrac{d(\Delta T)}{dt}=-k \Delta T$ so $\Delta T(t)=e^{kt}$, i.e. the rate of change in temperature is proportional to the difference in temperature itself. This is a very natural concept.
+
+## Implicit derivatives
+
+Sometimes functions do not have separate independent and dependent variables and are rather on the same side of the equation, i.e. interdependent in a certain relation. 
+
+### E.g. $x^2 + y^2 = 5^2$.
+
+To calculate the derivative, you derive both sides of the equation, giving
+
+$2xdx + 2ydy = 0$
+
+$\dfrac{dy}{dx}=-\dfrac{x}{y}$
+
+### E.g. $sin(x)y^2=x$
+
+$sin(x)y^2=x$. Derive both sides using "Left d-right plus right d-left"...
+
+$sin(x)2ydy+y^2cos(x)dx=dx$
+
+$\dfrac{dy}{dx}=$
+
+### E.g. $y=ln(x)$
+
+Remember, $ln(x)$ is the inverse function of $e^x$.
+
+$y=ln(x)$
+
+$e^y=x$
+
+$e^ydy=dx$
+
+$\dfrac{dy}{dx}=\dfrac{1}{e^y}=\dfrac{1}{x}$.
+
+# Limits
+
+## Formal definition of derivatives
+
+General form: $\dfrac{ds}{dt}(s)=\dfrac{s(t+dt)-s(t)}{dt}$ as $dt \rightarrow 0$
+
+$\dfrac{df}{dx}(2)=\lim_{h \rightarrow 0} \dfrac{f(2+h)-f(2)}{h}$
+
+## $(\epsilon, \delta)$ definition of limits
+
+Glimpse into *real analysis*. Idea is that when a limit exists you can make the output range as small as you want, but when the limit does *not* exist, that *output* range can*not* get smaller than some particular value (e.g. for discontinuous functions) no matter how much you shrink the *input* range.
+
+What it means for the limit to *exist* is that you can always find a range of inputs around our limiting input some distance **delta** from 0, such that any *input* within a distance *delta* of 0 corresponds to an output within a distance **epsilon** of 12 (or other number on right of equation).
+
+## L'Hôpital's rule (irl Bernoulli's rule)
+
+$lim_{x \rightarrow a}\dfrac{f(x)}{g(x)}=\dfrac{ \dfrac{df}{dx}(a)dx}{\dfrac{dg}{dx}(a)dx}=\dfrac{ \dfrac{df}{dx}(a)}{\dfrac{dg}{dx}(a)}$
+
+### E.g. Dampened oscillation $\dfrac{sin\pi x}{x^2-1}$
+
+At $x=(-1,1)$ denominator is 0.
+
+Derivative of $sin(\pi x)$:
+
+$d(sin(\pi x))=\pi cos(\pi x)dx$ and at $x=1$ we have 
+
+$\pi cos(\pi)dx=-\pi dx$.
+
+Similarly for $d(x^2-1)=2xdx=2dx$. Plugging it into the formal derivative equation, we have,
+
+$lim_{x \rightarrow 1}\dfrac{sin\pi x}{x^2-1} \approx \dfrac{-\pi dx}{2dx}\approx \dfrac{-\pi }{2}$
+
+```{r}
+x <- seq(-2*pi, 2*pi, 0.1)
+y <- sin(pi*x)/(x^2-1)
+
+x_illeg <- c(-1.000000001, 1.000000001)
+y_illeg <- sin(pi*x_illeg)/(x_illeg^2-1)
+round(y_illeg[2], 6)==round(-pi/2, 6)
+
+plot(x, y, type="l", col=pal[1], lwd=3)
+abline(h=0, v=0, lwd=2)
+points(rep(x_illeg,2), c(y_illeg,0,0), pch=21, bg="white")
+lines(x, sin(pi*x), col=pal[3], lwd=2)
+lines(x, x^2-1, col=pal[9], lwd=2)
+```
+
+## Relationship of area and slope
+
+Slope = $\dfrac{\int_0^\pi sin(x)dx}{\pi}=\dfrac{-cos(x)(-cos(0))}{\pi}=\dfrac{2}{\pi}$
+
+```{r}
+x <- seq(-2*pi, 2*pi, 0.1)
+y <- sin(x)
+y1 <- -cos(x)
+y2 <- 2*x/pi
+
+plot(x, y, type="l", col=pal[1], lwd=2, ylim=c(-3,3))
+abline(h=0, v=0, lwd=2)
+lines(x, y1, col=pal[3])
+abline(v=pi, lty=2)
+abline(h=-1, lty=2)
+abline(a=-1, b=2/pi, lty=2)
+```
+
+Notice how the 3 dotted lines form a triangle. The curved orange area above and below the sloped line cancel each other out, such that the area from $\int_0^\pi sinx=\pi$
+
+Why does the slope represent an *average* value of x in that region?
+
+$Average=\dfrac{\int_a^b f(x) dx}{b-a}=\dfrac{F(b)-F(a)}{b-a}$
+
+
+# Taylor Expansions 
+
+Taylor expansions allow us to approximate solutions/functions when $x\rightarrow 0$. Largely about taking non-polynomial functions and finding polynomials that approximate them near some angle. Why do this? Polynomials are *much* easier to deal with than other functions, such as cosine, etc. They are easier to compute derivatives, integrals.
+
+## General form
+
+At $x-0$:
+
+$P(x)=f(0) + \dfrac{df}{dx}(0)\dfrac{x^1}{1!} + \dfrac{d^2f}{dx^2}(0)\dfrac{x^2}{2!} + \dfrac{d^3f}{dx^3}(0)\dfrac{x^3}{3!} + \dfrac{d^4f}{dx^4}(0)\dfrac{x^4}{4!} + ...$
+
+At any point $x=a$:
+
+$P(x)=f(a) + \dfrac{df}{dx}(a)\dfrac{(x-a)^1}{1!} + \dfrac{d^2f}{dx^2}(a)\dfrac{(x-a)^2}{2!} + \dfrac{d^3f}{dx^3}(a)\dfrac{(x-a)^3}{3!} + \dfrac{d^4f}{dx^4}(a)\dfrac{(x-a)^4}{4!} + ...$
+
+**Definitions**:
+
+- **Taylor series**: the infinite sum, including *all* polynomial terms
+
+- **Convergent series**: converges to the actual solution of the original function
+
+- **Divergent series**: after reaching a certain threshold, will never converge and rather overshoot back and forth
+
+  + **Radius of convergence**: the aforementioned threshold before which the series converges but after which the series diverges
+
+## Example: $e^x$
+
+The easiest example of a Taylor series is $e^x$, since $\dfrac{d(e^x)}{dx}=e^x$, i.e. its derivative is the same as the original function! So using the general form above...
+
+$P(e^x)=1 + x + \dfrac{1}{2}x^2 + \dfrac{1}{6}x^3 + \dfrac{1}{24}x^4 + ...$
+
+## Example: $e^{-x^2}$
+
+Will need the *chain rule* for step (2)...
+
+$\dfrac{d}{dx}(g(h(x))=\dfrac{dg}{dh}\dfrac{dh}{dx}=\dfrac{dg}{dx}$
+
+Steps:
+
+1. *Original*: $e^{0^2}=1$; *polynomial*: $P(x)=1 + ...$
+2. *1st derivative*: $\dfrac{d(e^{-x^2})}{dx}= \dfrac{dg}{dh}\dfrac{dh}{dx}=\dfrac{dg}{dx}= ln(e)e^{h(x)}(-2x)=-e^{-x^2}2x=-(0)^2ln(0)=0$; *polynomial*: $P(x)=1 + 0x + ...$
+3. *2nd derivative*: $\dfrac{-e^{-x^2}2x}{dx}=-2e^{-x^2} + 2xln(e)e^{-x2}==-2e^{-x^2} + 2xe^{-x2}=-2$; *polynomial*: $P(x)=1 + 0x + -2\dfrac{1}{2}x^2 +...=1 + 0x - 2x^2 +...$
+4. ...
+
+$P(e^{-x^2})=1 + 0x - 2(\dfrac{1}{2})x^2 + 0x^3 + \dfrac{1}{2}x^4 + ...$
+
+
+```{r, fig.height=4, fig.width=8}
+## first derivative
+D( expression( e^(-x^2) ), 'x') # -(e^(-x^2) * (log(e) * (2 * x)))
+
+e <- exp(1)
+
+test_fun <- function(x) {
+  e <- exp(1)
+  y <- e^(-x^2)
+  return(y)
+}
+
+tay_fun <- function(x) {
+  e <- exp(1)
+  y <- 1-(x^2)+0.5*x^4
+  return(y)
+}
+
+test_fun2 <- function(x) {
+  e <- exp(1)
+  y <- e^x
+  return(y)
+}
+
+tay_fun2 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)
+  return(y)
+}
+
+tay_fun2_2 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)+((1/6)*(x^3))
+  return(y)
+}
+
+tay_fun2_3 <- function(x) {
+  e <- exp(1)
+  y <- 1+x+(0.5*x^2)+((1/6)*(x^3))+((1/24)*(x^4))
+  return(y)
+}
+
+x <- seq(-5, 5, by=0.1)
+
+par(mfrow=c(1,2))
+
+plot(x, test_fun2(x), type="l", col=cl1, lwd=3, ylim=c(-0.5,2))
+lines(x, tay_fun2(x), col=pal[3], lwd=2)
+lines(x, tay_fun2_2(x), col=pal[5], lwd=2)
+lines(x, tay_fun2_3(x), col=pal[8], lwd=2)
+abline(h=0, v=0, lwd=4)
+
+plot(x, test_fun(x), type="l", col=cl1, lwd=3, ylim=c(-0.5,2))
+lines(x, tay_fun(x), col=cl2, lwd=2)
+abline(h=0, v=0, lwd=4)
+
+```
+
+## Example: $y=cosx$
+
+Cosine form:
+
+$cos(x)=1$ at $x=0$. Derivative is $\dfrac{d(cos)}{dx}(0)=-sin(0)=0$.
+
+Polynomial form:
+
+Generally, $P(x)=c_0 + c_1x + c_2x^2$. We know that $cos(0)=1$; therefore, $c_0$, giving us $P(x)=1 + c_1x + c_2x^2$. Deriving that expression, we get $\dfrac{dP}{dx}(0)=c_1 + 2c_20=c_1$.
+
+$c_0=1$
+$c_1=0$
+
+Now we have $P(x)=1 + 0x + c_2x^2$ and are free to change $x_2$ so we can take advantage of the fact that the derivative $-sinx$ curves downward upon moving away from 0, i.e. it has a negative second derivative. Even though the rate of change is 0 at that point, the rate of change itself is decreasing at that point. <mark >Making sure that the second derivatives match will ensure that the original curve and polynomial curve at the same rate</mark>. 
+
+$\dfrac{d^2P}{dx^2}(x)=2c_2=-1$
+$c_2=-1/2$
+
+Steps:
+
+1. *Original*: $cos(x) \xrightarrow {x \rightarrow 0}1$; *polynomial*: $P(x)=1 +...$
+  + 1st term is 1 b/c cos(0) is 1
+  + 2nd term is 0 b/c -sin(0) is 0
+2. *1st derivative*: $\dfrac{d(cosx)}{dx}=-sinx=-sin0=0$  $P(x)=1 + 0c...$
+2. *2nd derivative*: $-sin(0)=0$; *polynomial*: $\dfrac{dP}{dx}(x)=0 + 0x + 2c_2x$
+3. *2nd derivative*: $-cos(0)=-1$; *polynomial*: $\dfrac{d^2P}{dx^2}(x)=2c_2$
+
+**Polynomial**: $P(x)=1 - \dfrac{1}{2}x^2$
+
+```{r}
+## first and second derivatives
+D( expression( cos(x) ), "x" ) # -sinx
+D( expression( -sin(x) ), "x" ) # -cosx
+
+## set colors
+pal <- brewer.pal(8, name="Spectral")
+cl1 <- "red4"
+cl2 <- "peru"
+
+## initiate x
+x <- seq(-10,10,by=0.2)
+
+## plot
+plot(x, cos(x), type="l", col=cl1, lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=cl2)
+lines(x, -cos(x), col="wheat")
+abline(h=0, v=0, lwd=2)
+abline(v=pi, col="navy", lty=2)
+abline(v=-pi, col="navy", lty=2)
+
+# original solution is 1
+abline(h=1, col="navy", lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col="blue", lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col="lightblue", lwd=2)
+abline(a=0, b=-1, col="lightblue", lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col="orange", lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col="orange3", lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col="orange4", lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+```
+
+Now let's try with brewer palette colors...
+
+```{r}
+## plot
+n <- 11
+pal <- brewer.pal(11, name="Spectral")
+plot(x, cos(x), type="l", col=pal[[7]], lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=pal[[6]])
+lines(x, -cos(x), col=pal[[5]])
+abline(h=0, v=0, lwd=2)
+abline(v=pi, lty=2)
+abline(v=-pi, lty=2)
+
+# original solution is 1
+abline(h=1, col=pal[[n]], lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col=pal[[n-1]], lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col=pal[[n-2]], lwd=2)
+abline(a=0, b=-1, col=pal[[n-2]], lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col=pal[[1]], lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col=pal[[2]], lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col=pal[[3]], lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+
+## plot
+n <- 11
+pal <- brewer.pal(n, name="BrBG")
+plot(x, cos(x), type="l", col=pal[[7]], lwd=3, ylim=c(-pi,pi))
+lines(x, -sin(x), col=pal[[6]])
+lines(x, -cos(x), col=pal[[5]])
+abline(h=0, v=0, lwd=2)
+abline(v=pi, lty=2)
+abline(v=-pi, lty=2)
+
+# original solution is 1
+abline(h=1, col=pal[[n]], lwd=2)
+
+# 1st derivative solution is 0
+abline(h=0, col=pal[[n-1]], lwd=2)
+
+# 2nd derivative solution is -1
+abline(h=-1, col=pal[[n-2]], lwd=2)
+abline(a=0, b=-1, col=pal[[n-2]], lwd=2)
+
+# taylor expansion
+lines(x, (1-(0.5*x^2)), col=pal[[1]], lwd=2)
+lines(x, (1-(0.5*x^2)+(1/6)*x^3), col=pal[[2]], lwd=2) # add 3rd term, 1/6 b/c 3*2*1=6
+lines(x, (1-(0.5*x^2)+(1/24)*x^4), col=pal[[3]], lwd=2) # add 4th term, 1/24 b/c 4*3*2*1=24
+
+```
+
+So how good is this approximation? Let's try it out for, say, 0.1...
+
+```{r}
+cos(0.1)
+1-0.5*(0.1^2)
+```
+
+Pretty damn close!
+
+
+# Golden ratio
+
+$x_{n+1}=1+\dfrac{1}{x_n}$
+
+```{r}
+rand_nums <- rnorm(20, mean=0, sd=50)
+
+n_iter <- 20
+mat <- matrix(data=NA, nrow = length(rand_nums), ncol=n_iter)
+for(i in 1:length(rand_nums)) {
+  x <- rand_nums[i]
+  for(j in 1:n_iter) {
+    ans_tmp <- 1+(1/x)
+    mat[i,j] <- ans_tmp
+    x <- ans_tmp
+  }
+}
+
+mat
+```
+
+The golden ratio is the **fixed point**, $\phi$! No matter where you start, you end up there.
+
+## Cobbweb plots
+
+Ref.: https://bayesianbiologist.com/2012/07/13/dynamical-systems-mapping-chaos-with-r/
+
+```{r}
+q_map<-function(r=1,x_o=runif(1,0,1),N=100,burn_in=0,...)
+{
+  par(mfrow=c(2,1),mar=c(4,4,1,2),lwd=2)
+  ############# Trace #############
+  x<-array(dim=N)
+  x[1]<-x_o
+  for(i in 2:N)
+    x[i]<-r*x[i-1]*(1-x[i-1])
+  
+  plot(x[(burn_in+1):N],type='l',xlab='t',ylab='x',...)
+  #################################
+  
+  ##########  Quadradic Map ########
+  x<-seq(from=0,to=1,length.out=100)
+  x_np1<-array(dim=100)
+  for(i in 1:length(x))
+    x_np1[i]<-r*x[i]*(1-x[i])
+  
+  plot(x,x_np1,type='l',xlab=expression(x[t]),ylab=expression(x[t+1]))
+  abline(0,1)
+  
+  start=x_o
+  vert=FALSE
+  lines(x=c(start,start),y=c(0,r*start*(1-start)) )
+  for(i in 1:(2*N))
+  {
+    if(vert)
+    {
+      lines(x=c(start,start),y=c(start,r*start*(1-start)) )
+      vert=FALSE
+    }
+    else
+    {
+      lines(x=c(start,
+                r*start*(1-start)),
+            y=c(r*start*(1-start),
+                r*start*(1-start)) )
+      vert=TRUE
+      start=r*start*(1-start)
+    }
+  }
+  #################################
+}
+
+q_map(r=3.84,x_o=0.4)
+```
+
+```{r}
+q_map<-function(x_o=runif(1,0,1), N=20, burn_in=0,...)
+{
+  par(mfrow=c(1,2), lwd=2) #mar=c(4,4,1,2), 
+  ############# Trace #############
+  x <- array(dim=N)
+  x[1] <- x_o
+  for(i in 2:N)
+    #x[i]<-r*x[i-1]*(1-x[i-1])
+    x[i]<-1+(1/x[i-1])
+  
+  plot(x[(burn_in+1):N], type='l', xlab='t', ylab='x',...)
+  #################################
+  
+  ##########  Quadradic Map ########
+  x<-seq(from=0,to=5,length.out=100)
+  x_np1<-array(dim=100)
+  for(i in 1:length(x))
+    #x_np1[i]<-r*x[i]*(1-x[i])
+    x_np1[i] <- 1+(1/x[i])
+    
+  plot(x, x_np1, type='l', col="navy", lwd=3, xlab=expression(x[t]), ylab=expression(x[t+1]), xlim=c(-1,10), ylim=c(-5,5))
+  abline(0,1, col="lightblue")
+  abline(h=0, v=0, lwd=3)
+  
+  start=x_o
+  vert=FALSE
+  lines( x=c(start,start), y=c(0,1+1/start), col=pal[1] )
+  for(i in 1:(2*N))
+  {
+    if(vert)
+    {
+      lines( x=c(start,start), y=c(start,1+1/start), col=pal[2] ) 
+      vert=FALSE
+    }
+    else
+    {
+      lines(x=c(start,
+                1+1/start),
+            y=c(1+1/start,
+                1+1/start), col=pal[3] )
+      vert=TRUE
+      start=1+1/start
+    }
+  }
+  #################################
+}
+
+q_map(r_o=0.4)
+```
+
+## Bifurcation plot
+
+```{r}
+library(parallel)
+bifurcation <- function(from=3,to=4,res=500,
+                      x_o=runif(1,0,1),N=10,reps=10,cores=4)
+{
+  r_s<-seq(from=from,to=to,length.out=res)
+  r<-numeric(res*reps)
+  for(i in 1:res)
+    r[((i-1)*reps+1):(i*reps)]<-r_s[i]
+  
+  x<-array(dim=N)
+  
+  iterate<-mclapply(1:(res*reps),
+                    mc.cores=cores,
+                    function(k){
+                      x[1]<-runif(1,0,1)
+                      for(i in 2:N)
+                        x[i]<-r[k]*x[i-1]*(1-x[i-1])
+                      
+                      return(x[N])
+                    })
+  
+  plot(r,iterate,pch=15,cex=0.1)
+  
+  return(cbind(r,iterate))
+}
+
+#warning: Even in parallel with 4 cores, this is by no means fast code!
+bi<-bifurcation()
+#png('chaos.png',width=1000,height=850)
+#par(bg='black',col='green',col.main='green',cex=1)
+#plot(bi,col='green',xlab='R',ylab='n --> inf',main='',pch=15,cex=0.2)
+#dev.off()
+```

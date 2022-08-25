@@ -1,0 +1,696 @@
+---
+title: "Non-linear Dynamics and Chaos"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 6
+      fig_width: 6
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+# Ch. 0: Setup
+
+**Date**: '`r paste("First created on 2022-08-18. Updated on", Sys.Date())`'
+
+## Load libraries
+
+```{r}
+suppressPackageStartupMessages( {
+  library(pracma)
+  library(RColorBrewer)
+  library(ZeBook) # for Verhulst model i.e. logistic growth
+} )
+
+source( "R/std_functions.R" )
+```
+
+# Ch. 1: Overview
+
+**Non-linear Dynamics and Chaos** by Steven Strogatz, *2015*g
+
+Youtube: https://www.youtube.com/watch?v=p3lmqcmYkvE&ab_channel=Introductiontononlineardynamics
+
+## History
+
+Chaos and fractals are part of a greater subject called **dynamics**, which deals with *change*, i.e. <mark >systems that evolve with time</mark>.
+
+- 1600s: Newton invents differential equations; solved two-body problem
+
+- 1800s: Poincaré emphasizes *qualitative* rather than quantitative questions, i.e. is the solar system stable forever or will some planets eventually fly off to infinity?; developed *geometric* approach to address such questions
+  + Defined <mark >**chaos**, in which a deterministic system exhibits *aperiodic* behavior that depends *sensitively* on the initial conditions, thereby rendering long-term prediction impossible</mark>.
+
+- 1963: Lorenz discovers chaotic motion on a *strange attractor*; he studied a simplified model of convection rolls in the atmosphere to gain insight into the notorious unpredictability of the weather; he found that the solutions to his equations never settled down to equilibrium *or* to a periodic state--instead they continued to oscillate in an **irregular, aperiodic** fashion.
+  + Moreover, if he started his simulations from two slightly different initial conditions, the resulting behaviors would soon become totally different, i.e. the system was inherently unpredictable, tiny errors would amplify rapidly eventually leading to embarrassing forecasts
+  + BUT Lorenz also showed that there was **structure in the chaos**--when plotted, the solutions to his equations fell onto a butterfly shape; he he argued that this set had to be "an infinite complex of surfaces"(???)--today we would regard it as an example of a **fractal**.
+  
+- 1970s: Feigenbaum discovers that there are certain universal laws governing the transition from regular to chaotic behavior.
+
+## Definitions
+
+- **ODEs**: only one independent variable, time; i.e. purely temporal behavior
+- **PDEs**: >1 independent variables, e.g. space and time
+
+**Mathematical conventions**:
+
+- <mark >$\dot{x}=f(x)=\dfrac{dx}{dt}$</mark>: indicates the dot derivative, which is a form of $f(x)$, or, more specifically, $\dfrac{dx}{dt}$
+  + This function is called the **trajectory** based at $x_0$ and represents the solution of the **ODE** starting at $x_0$
+  + $x(t)$ is a real-valued function of time $t$, and $f(x)$ is a smooth real-valued function of $x$
+  + Such equations are **one-dimensional** or **first-order systems**
+  + System=dynamical system (NOT system of equations)
+  + $f$ does NOT explicitly depend on time; time-dependent or "nonautonomous" equations of the form $\dot{x}=f(x,t)$ are two-order dynamical systems
+  
+E.g. Damped oscillator $m\dfrac{d^2x}{dt}+b\dfrac{dx}{dt}+kx=0$ can be represented as $m\ddot{x} + b\dot{x} +kx = 0$, then solving for $\ddot{x}$ we get $\ddot{x}=\dfrac{-b}{m}\dot{x} - \dfrac{k}{m}x$. This dynamical system is said to be **linear**, because all the $x$ on the right-hand side appear to the first power only.
+
+  
+- <mark >$x^*$ denotes a fixed point</mark>
+  + **Stable fixed point**: *local* flow towards point
+  + **Unstable fixed point**: local flow is away from it
+  
+- In terms of the ODE, fixed points represent *equilibrium solutions*
+  + An equilibrium is *stable*, if all sufficiently small disturbances pointing away from it damp out in time, and is represented by stable fixed points
+  + In unstable equilibria, disturbances grow in time, represented by unstable fixed points 
+
+
+# Ch.2: Flows on a line
+
+## Example $\dot{x}=x-cosx$
+
+Example 2.2.3: Sketch the phase portrait corresponding to $\dot{x}=x-cosx$, and determine the stability of all the fixed points.
+
+```{r, fig.width=12}
+## initialize x
+x <- seq(-10, 10, by=0.01)
+y1 <- cos(x)
+y2 <- x
+
+## y-intercept at where x=cosx
+x_int <- mean( x[which( round(x,1)==round(y1,1) )] )
+y_int <- mean( y1[which( round(x,1)==round(y1,1) )] )
+
+## plot
+par(mfrow=c(1,2))
+plot(x, y1, type = "l", col="blue", xlim=c(-5,5), ylim=c(-5,5))
+lines(x, y2, col="red")
+abline(h=0, v=0, lwd=2)
+# unstable fixed point(s)
+points(x_int, y_int, pch=21, bg="white", cex=1.5)
+
+plot(x, (x-cos(x)), type = "l", col="purple", xlim=c(-5,5), ylim=c(-5,5))
+abline(h=0, v=0, lwd=2)
+# unstable fixed point(s)
+points(x_int, 0, pch=21, bg="white", cex=1.5)
+```
+
+These lines intersect at exactly one point, $x^*$, which corresponds to a fixed point, since $x^*=cosx^*$, and therefore $f(x)=0$. Morever, when the line is above the cosine curve, we have $x>cosx$ and so $\dot{x}>0$: <mark >**the flow is to the _right_**</mark>. Similarly, the flow is to the left where the line is below the cosine curve. Hence $x^*$ is the only fixed point, and it is unstable. Note that we can classify the stability of $x^*$, even though we don't have a formula for x itself! (???)
+
+
+## Example $\dot{x}=x^2 - 1$
+
+Find fixed points and classify their stability.
+
+$x^2-1=(x+1)(x-1)$; therefore, $x^*=+1,-1$ (the fixed points). -1 is a stable fixed point and +1 is an unstable fixed point. The +1 fixed point will get repelled to $+\infty$.
+
+Derivative is $f'(x)=2x$. X-intercepts are $x^2=1$, so $x=-1,1$.
+
+```{r}
+## derivative, f'(x)
+D( expression(x^2-1), 'x' ) # 2x
+
+## plot
+x <- seq(-10, 10, by=0.2)
+plot(x, (x^2-1), type = "l", col="navy", xlim=c(-5,5), ylim=c(-5,5))
+abline(h=0, v=0, lwd=2)
+
+# stable fixed point(s)
+points(-1, 0, pch=21, bg="black", cex=1.5)
+
+# unstable fixed point(s)
+points(1, 0, pch=21, bg="white", cex=1.5)
+```
+
+
+## Population growth, $\dot{N}=rN(1-\dfrac{N}{K})$
+
+Simplest model is $N(t)=\dot{N}=rN$, in which $r$ is the growth rate.
+
+Exponential growth model is $N(t)=\dot{N}=N_0e^{rt}$, where $N_0$ is the population at t=0. However, growth rate cannot go on forever so often populations will reach an asymptote or even have a __*carrying capacity*__ $K$ in which the growth rate actually becomes negative, i.e. the death rate > birth rate. This leads us to the **logistic equation**:
+
+$\dot{N}=rN(1-\dfrac{N}{K})$, which can be solved analytically, though we prefer a graphic approach =)
+
+```{r}
+logit_fun <- function(N, K, r) {
+  y <- (r*N)*( 1 - (N/K) )
+  return(y)
+}
+
+K <- 1e3
+r <- 0.25
+x <- seq(0, 1.5*K, by=1)
+
+## plot f(x)
+plot(x, logit_fun(x, K, r), type="l", col="navy", lwd=2)
+abline(h=0, v=0, lwd=2)
+abline(v=K, lty=3, col="red4")
+abline(v=K/2, lty=3, col="red4")
+
+# stable fixed point(s)
+points(0, 0, pch=21, bg="white", cex=1.5)
+
+# unstable fixed point(s)
+points(K, 0, pch=21, bg="black", cex=1.5)
+```
+
+$N^*=0,K$, in which 0 is unstable and K is stable. This makes sense, as a small population will grow exponentially fast and run away from 0. On the other hand, if N is disturbed slightly from K, the disturbance will decay monotonically and $N(t)\rightarrow K$ as $t \rightarrow \infty$.
+
+
+### Integrate $r-\dfrac{2rN}{K}$ 
+
+Trying to generate the plot from p. 
+
+$\dot{N}=rN(1-N/K)$
+$\dfrac{dN}{dt}=rN(1-N/K)$
+
+The following is the integral according to...
+
+Ref.: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/http://www.ms.uky.edu/~ma138/Spring18/Lectures/slides_14.pdf
+
+$N(t)=\dfrac{K}{1+(K/N_0-1)e^{rt}}$
+
+```{r}
+## return derivative expression
+D( expression( (r*N)*( 1 - (N/K) ) ), "N" )
+
+## but we need the integral, or can compute dN and add it iteratively
+int_fun <- function(r, K, N0, duration) {
+  N <- rep(NA, duration)
+  N[1] <- N0
+  
+  for(day in 1:(duration-1)) {
+    dN = r * N[day] * (1 - N[day]/K)
+    N_new = N[day] + dN 
+    N[day + 1] = N_new
+  }
+  return(data.frame(Time = 1:duration, N = N[1:duration]))
+}
+
+## initiate constants
+K <- 1e2
+r <- 0.08 # r MUST be >1!!!
+duration <- 100
+
+## multiplier for K to calculate N0 (mK=N0)
+m <- c(4,2,1.5,1.2,1,1/2,1/4,1/8,0.01)
+n <- length(m)
+pal <- rev( brewer.pal(n, name="Spectral") )
+
+## plot, adding lines for different initiations of N0 in loop
+plot( int_fun(r=r, N0=4*K, K=K, duration=duration), type="l", col=pal[[n]], ylim=c(0, 3*K), lwd=2 )
+for(i in 1:length(m)) {
+  lines(int_fun(r=r, N0=m[i]*K, K=K, duration=duration), type="l", col=pal[[i]], lwd=2)
+}
+abline(h=0, v=0, lwd=2)
+abline(h=K, lty=3, lwd=3)
+```
+
+
+## Linear stability analysis
+
+Requires basic knowledge of Taylor expansions. 
+
+Determine stability of the fixed points of a dynamical system analytically, e.g. <mark >calculate *rate of decay* to a stable fixed point via *linearizing* about a fixed point.</mark>
+
+Let $x^*$ be a fixed point and let $n(t)=x(t)-x^*$ be a *small perturbation* away from a fixed point, i.e. $x(t)-x^*=0.1$ or something like that. 
+
+**Proof**:
+
+1. Write equation for small perturbation away from fixed point, e.g. $n(t)=x(t)-x^*$
+2. Derive (1), which gives $\dfrac{dn}{dt}=\dot{n}=\dfrac{d}{dt}(x-x^*)=\dot{x}$, i.e. as y changes with time what is the rate of change of $\Delta x$?
+3. Since $x^*$ is constant, $\dot{n}=\dot{x}=f(x)=f(x^*+n)$.
+  + This confused me at first, but makes sense since $x-x^*=n$ so $x=x^*+n$.
+4. Perform **Taylor expansion**: $f(x^*+n)=f(x^*)+nf'(x^*)+O(n^2)$, where $O(n^2)$ denotes quadratically small terms in n. 
+5. Finally, note that $f(x^*)=0$ since $x^*$ is a fixed point, i.e. constant; hence, $f(x^*+n)=\dot{n}=nf'(x^*)+O(n^2)$.
+  + $f'(x)$ denotes the derivative of $f(x)$... lol.
+6. Now, since $nf'(x^*) \neq 0$ and O term is negligible, we may write $\dot{n}\approx nf'(x^*)$.
+  + <mark >NOTE: $nf'(x^*) \neq 0$</mark>, i.e. there is an appreciable rate of change near the fixed point; we assume it is NOT entirely fixed.
+
+This is a linear equation in $n$, and is called the <mark >linearization about $x^*$. It shows that *the perturbation $n(t)$ grows exponentially if $f'(x^*)>0$ and decays if $f'(x^*)<0$*.</mark> NOTE: if O term is not negligible, then a non-linear analysis is required.
+
+<mark >tl;dr: The slope $f'(x^*)$ at a fixed point determines its stability.</mark>
+
+
+### Example $\dot{x}=sinx$
+
+First, let's plot...
+
+```{r}
+## derivative
+D( expression(sin(x)), "x")
+
+## initiate x
+x <- seq(-10, 10, by=0.1)
+
+## plot f(x) and f'(x)
+plot(x, sin(x), type="l", col="red4", lwd=3, ylim=c(-pi, pi))
+lines(x, cos(x), col="peru")
+abline(h=0, v=0, lwd=2)
+abline(v=c(-3*pi, -2*pi, 1*-pi, 0*pi, 1*pi, 2*pi, 3*pi), lty=2, col="navy")
+points(c(-2*pi, 0*pi, 2*pi), rep(0,3), pch=19, cex=1.5)
+points(c(-3*pi, -pi, pi, 3*pi), rep(0,4), pch=21, bg="white", cex=1.5)
+```
+
+We can see from the graph that there are fixed points occur where $sinx=0$ at $x^*=k\pi$ or $-\pi, 0, \pi$, among others, which are stable, unstable, and stable, respectively. This means that $f'(x^*)<0$, $f'(x^*)>0$, $f'(x^*)<0$ at each of those points. 
+
+So all we have to do is calculate $\dot{y}$ to approximate $f'(x^*)$.
+
+Specifically, \begin{equation}
+  f'(x^*)=cosx^*=cosk\pi=
+    \begin{cases}
+      1, k & \text{even}\\
+      -1, k & \text{odd}\\
+    \end{cases}       
+\end{equation}
+
+```{r}
+## let's see if it checks out...
+cos( -3*pi )
+cos( 0 )
+cos(-pi)
+cos( 2*pi )
+```
+
+### Example $rN(1-\dfrac{N}{K})$
+
+Steps:
+
+1. Calculate fixed points where $N=0$.
+  + $N=0, K$
+2. Determine derivative and calculate its solutions at each fixed point.
+
+Derivative is $f'(N)=\dot{N}=2-\dfrac{2rN}{K}$
+
+```{r}
+## initialize constants
+K <- 1e2
+r <- 0.1
+
+## f'(x*) at 0
+r-2*r*0/K
+
+## f'(x*) at 0
+r-2*r*K/K
+```
+
+The derivative $f'(x^*)$ at fixed point 0 is $+r$ and at fixed point $K$ is $-r$, indicating that they are unstable and stable, respectively. 
+
+## Impossibility of oscillations
+
+Some definitions:
+
+1. **Blow-up**: a system that reaches infinity in finite time.
+2. **Overdamped**: a higher-order system that approaches a limit, such that you can cancel out terms and it behaves like a lower order (e.g. first order) system.
+
+tl;dr Oscillations are impossible for 1st order ODEs, because $\dot{x}=f(x)$ corresponds to flow on a *line*. If you flow, monotonically on a line, you'll never come back to your starting place--that's why periodic solutions are impossible (a line that makes a circle is an exception since you would return to your starting palce). This reasoning is fundamentally **topological** in origin. 
+
+## Potentials
+
+Potential $V(x)$ is defined by $f(x)=-\dfrac{dV}{dx}$ *(1)*. Then, calculate time derivative using chain rule (???), which gives $\dfrac{dV}{dt}=\dfrac{dV}{dx}\dfrac{dx}{dt}$.
+
+Now, for a first order system (which does not explicitly depend on time):
+
+$\dfrac{dx}{dt}=-\dfrac{dV}{dx}$
+
+since $\dot{x}=-\dfrac{dV}{dt}$ by the definition of a potential *(1)*. Hence,
+
+$\dfrac{dV}{dt}=-(\dfrac{dV}{dx})^2 \leq 0$.
+
+<mark >Thus, $V(t)$ decreases along trajectories</mark>, and so the particle always moves toward lower potential unless it is already at an equilibrium point, then $V$ remains constant. 
+
+### Example $\dot{x}=-x$
+
+Graph the potential.
+
+From *(1)* we know that $-\dfrac{dV}{dx}=-x$. We need to find $V(x)$. Integrate $V(x)=\int x=\dfrac{1}{2}x^2+C$, where C is an arbitrary constant so may as well make it 0. 
+
+```{r}
+x <- seq(-10, 10, by=0.1)
+
+ploT <- function(x, y, ...) {
+  par(font.lab = 2) # bold axis titles
+  plot(x, y, type="l", col="red4", lwd=1, ...) 
+  abline(h=0, v=0, lwd=2)
+  }
+
+ploT(x, -x, ylab="V(x)")
+lines(x, 0.5*x^2, col="cyan4", lwd=3)
+points(0, 0, pch=21, bg="black", cex=1.2)
+```
+
+
+### Example $\dot{x}=x-x^3$
+
+$-\dfrac{dV}{dx}=x-x^3$
+
+Integrate $V(x)=\int (x^3-x)=\dfrac{1}{4}x^4-\dfrac{1}{2}x^2+C$ (yay I did that one on my own hellz yeah it's all comin' back baybeh).
+
+```{r}
+x <- seq(-2, 2, by=0.1)
+ploT(x, x-x^3, ylab="V(x)", ylim=c(-1,1))
+lines(x, (0.25*x^4)-(0.5*x^2), col="cyan4", lwd=3)
+points(c(-1,0,1), c(0,0,0), pch=21, bg=c("black", "white", "black"), cex=1.2)
+```
+
+## Euler & Runge-Kutta methods
+
+Given the differential equation $\dot{x}=f(x)$, subject to the condition $x=x_0$ and $t=t_0$ find a systematic way to approximate the solution $x(t)$. Imagine we're flowing along the x-axis. Initially, we're at $x_0$ and the local velocity is $f(x_0)$. If we flow for a short time $\Delta t$, we'll have moved a distance $f(x_0)\Delta t$. Of course, this is an approximation since velocity is changing over time, but it is a reasonable approximation for small time steps. Thus
+
+$x(t_0 + \Delta t) \approx x_t = x_0 + f(x_0)\Delta t$.
+
+Now we *iterate* since our approximation has taken us to a new location $x_1$. 
+
+$x_{n+1} \approx x_n + f(x_n)\Delta t$.
+
+This is the old way and it does not do a great job the more time steps you take (Error $\epsilon \propto \Delta t$). A simple way to improve upon it is to take the mean $f(x)$ instead of the far left $f(x)$. If you do this to the fourth order, you have the <mark >fourth-order Runge-Kutta method</mark>.  
+
+
+# Ch. 3: Bifurcations
+
+## Introduction
+
+The dynamics of vector fields on the line are very limited: all solutions either settle down to equilibrium or head out to $+/-\infty$. Given this triviality, what's interesting about 1D systems? A: <mark > Dependence on parameters. </mark> Fixed points can be created or destroyed, their stability can change, etc. These qualitative changes are called __*bifurcations*__. 
+
+## Saddle-node bifurcation
+
+```{r}
+ploT <- function(x, y, ...) {
+  par(font.lab = 2) # bold axis titles
+  plot(x, y, type="l", col=pal[9], lwd=2, ...) 
+  abline(h=0, v=0, lwd=2)
+}
+
+x <- seq(-5,5,by=0.1)
+
+ploT(x, x^2+4, ylim=c(-10,20), xlim=c(-7,7))
+lines(x, x^2, col=pal[3], lwd=2)
+lines(x, x^2-4, col=pal[1], lwd=2)
+points(c(-2,0,2), rep(0,3), pch=21, bg=c("black", "grey", "white"))
+```
+
+### Example $\dot{x}=r-x-e^{-x}$
+
+Consider the first order system $\dot{x}=r-x-e^{-x}$. Show that it undergoes a saddle node bifurcation as r varies. Find the value of r at the bifurcation point.
+
+First, we plot $r-x$ and $e^{-x}$. *Where they intersect, we get $r-x=e^{-x}$, so
+$f(x)=r-x-e^{-x}=0$, so intersections of the line and the curve correspond to fixed points of the system.
+
+At some critical value $r=r_c$, the line becomes tangent to the curve. What is the bifurcation point $r_c$? If the $r-x$ and $e^{-x}$ intersect *tangentially*, we require equality of the functions themselves *and* their derivatives, i.e.
+
+$\dfrac{d(r-x)}{dt}=-1$. So $\dfrac{d(e^{-x})}{dt}=-e^{-x}=-1$
+
+$x=0$
+
+So the value of r, $r_c$, at which the fixed point undergoes a saddle-node bifurcation is...
+
+$r=x+e^{-x}=0+1=1$
+
+Now for the *algebraic* argument (as opposed to graphical)...
+
+Consider $\dot{x}=f(x,r)$ near the bifurcation at $x=x^*$ and $r=r_c$. Using Taylor series we get
+
+$\dot{x}=f(x,r)=f(x^*,r_c)+(x-x^*)\dfrac{df}{dx}|_{x^*,r_c} + (r-r_c)\dfrac{df}{dr}|_{x^*,r_c} + \dfrac{1}{2}(x-x^*)^2\dfrac{d^2f}{dx^2}|_{x^*, r_c}$.
+
+**NOTE**: Two terms vanish...
+
+- $f(x^*,r_c)=0$ as $x^*$ is a fixed point
+
+- $\dfrac{df}{dx}|_{x^*,r_c}=0$ by the tangency condition of the saddle-node bifurcation,
+
+so we are left with...
+
+$\dot{x}=f(x,r)=(r-r_c)\dfrac{df}{dr}|_{x^*,r_c} + \dfrac{1}{2}(x-x^*)^2\dfrac{d^2f}{dx^2}|_{x^*, r_c}=a(r-r_c) + b(x-x^*)$.
+
+
+
+```{r}
+x <- seq(-5,7,by=0.1)
+
+## value of r at which saddle=node bifurcation occurs
+r1 <- 0
+rc <- 1
+
+## f(x) at bifurcation point
+bp_y <- rc-0-exp(1)^-0
+
+## fp for r > rc
+r2 <- 2
+
+ploT(x, exp(1)^-x, ylim=c(-10,20), xlim=c(-7,7))
+lines(x, r1-x, col=pal[1], lwd=2)
+lines(x, rc-x, col=pal[3], lwd=2)
+lines(x, r2-x, col=pal[7], lwd=2)
+points(c(0), c(bp_y), pch=21, bg=c("black", "black", "white"))
+```
+
+
+## Transcritical bifurcation $\dot{x}=rx-x^2$
+
+Certain situations exist where a FP must exist for *all values of a parameter* and can never be destroyed. E.g. logistic equation and other simple models for growth of a single species, there is a fixed point at **zero** population, *regardless of the value of the growth rate.* HOWEVER, such a point may **change its stability** as the parameter (e.g. r) is varied.
+
+The normal form for transcritical bifrucation is:
+
+$\dot{x}=rx-x^2$, which is like the logistic equation except x can be + or -.
+
+```{r, fig.width=10, fig.height=3.3}
+logit_fun <- function(N, K, r) {
+  y <- (r*N)*( 1 - (N/K) )
+  return(y)
+}
+
+trans_bifurc <- function(x, r) {
+  y <- (r*x)-x^2
+  return(y)
+}
+
+r <- 1e2
+x <- seq(-100, 100, by=1)
+
+## plot f(x) for r<0
+par(mfrow=c(1,3))
+plot(x, trans_bifurc(x, -r), type="l", col="navy", lwd=2, ylim=c(-2e4,2e4), main="r<0")
+abline(h=0, v=0, lwd=2)
+points(-r, 0, pch=21, bg="white", cex=1.5)
+points(0, 0, pch=21, bg="black", cex=1.5)
+
+## r=0
+plot(x, trans_bifurc(x, 0), type="l", col="navy", lwd=2, ylim=c(-2e4,2e4), main="r=0")
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="grey", cex=1.5)
+
+## positive r
+plot(x, trans_bifurc(x, r), type="l", col="navy", lwd=2, ylim=c(-2e4,2e4), main="r>0")
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="white", cex=1.5)
+points(r, 0, pch=21, bg="black", cex=1.5)
+```
+
+Note that there is an FP at $x^*=0$ for all values of r.
+
+### Laser threshold
+
+Lasers are self-organizing, i.e. atoms are emitted at first randomly, then they become in phase with each other after a certain threshold of excitation is reached. Why?
+
+tl;dr You can write a simplified laser model that is a version of $\dot{x}=rx-x^2$, supporting that lasers undergo a transcritical bifurcation and after a threshold is reached a *new stable FP is formed* (similar to the figure above).
+
+
+## Supercritical pitchfork bifurcation $\dot{x}=rx-x^3$
+
+**Pitchform bifurcations** are common in physical problems that have __*symmetry*__.
+
+
+Normal form:
+
+$\dot{x}=rx-x^3$
+
+Note that this equation is *invariant* for $x, -x$, as in if you replace x with -x and then cancel the minus signs, you are right back at quare one. <mark >Invariance for $x, -x$ indicates left/right symmetry</mark>.
+
+New stable points are at $x^*=\pm\sqrt{r}$ because  **s y m m e t r y**  ( = | = )
+
+
+```{r, fig.width=10, fig.height=3.3}
+pf_bifurc <- function(x, r) {
+  y <- (r*x)-x^3
+  return(y)
+}
+
+r <- 1e4
+x <- seq(-200, 200, by=1)
+lim <- 1e6
+fp <- sqrt(r)
+
+## plot f(x) for r<0
+par(mfrow=c(1,3))
+plot(x, pf_bifurc(x, -r), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r<0")
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="black", cex=1.5)
+
+## r=0
+plot(x, pf_bifurc(x, 0), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r=0")
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="black", cex=1.5)
+
+## positive r
+plot(x, pf_bifurc(x, r), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r>0")
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="white", cex=1.5)
+points(c(-fp, fp), c(0,0), pch=21, bg="black", cex=1.5)
+```
+
+### Example $\dot{x}=-x+\beta tanhx$
+
+This equation arises in statistical mechanics and neural networks. Show that it undergoes a supercritical pitchfork bifurcation as $\beta$ is varied. Plot FPs.
+
+```{r}
+# pf_tanh <- function(x, b) {
+#   y <- b*tanh(x) # tanh is the hyperbolic tangent function
+#   return(y)
+# }
+#   
+# b <- 3
+# x <- seq(-2, 2, by=0.1)
+# lim <- 1e6
+# fp <- sqrt(r)
+# 
+# ## plot f(x) for r<0
+# #par(mfrow=c(1,3))
+# plot(x, pf_tanh(x, -b), type="l", col="navy", lwd=2) #, ylim=c(-lim, lim), main="r<0")
+# abline(h=0, v=0, lwd=2)
+# points(0, 0, pch=21, bg="black", cex=1.5)
+```
+
+
+## Subcritical pitchform bifurcation $\dot{x}=rx+x^3$
+
+Subcritical pitchforks, are *stabilizing* in that they pull x(t) back toward 0. __*Subcritical*__ PBs are *destabilizing* as in $\dot{x}=rx+x^3$.
+
+```{r, fig.width=10, fig.height=3.3}
+sup_pf_bifurc <- function(x, r) {
+  y <- (r*x)-x^3
+  return(y)
+}
+
+sub_pf_bifurc <- function(x, r) {
+  y <- (r*x)+x^3
+  return(y)
+}
+
+sub_stab_pf_bifurc <- function(x, r) {
+  y <- (r*x)+x^3-x^5
+  return(y)
+}
+
+r <- 1e4
+x <- seq(-200, 200, by=1)
+lim <- 1e6
+fp <- sqrt(r)
+
+## plot f(x) for r<0
+par(mfrow=c(1,3))
+plot(x, sup_pf_bifurc(x, -r), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r<0")
+lines(x, sub_pf_bifurc(x, -r), col=pal[3], lwd=2)
+lines(x, sub_stab_pf_bifurc(x, -r), col=pal[7], lwd=2)
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="black", cex=1.5)
+
+## r=0
+plot(x, sup_pf_bifurc(x, 0), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r=0")
+lines(x, sub_pf_bifurc(x, 0), col=pal[3], lwd=2)
+lines(x, sub_stab_pf_bifurc(x, 0), col=pal[7], lwd=2)
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="black", cex=1.5)
+
+## positive r
+plot(x, sup_pf_bifurc(x, r), type="l", col="navy", lwd=2, ylim=c(-lim, lim), main="r>0")
+lines(x, sub_pf_bifurc(x, r), col=pal[3], lwd=2)
+lines(x, sub_stab_pf_bifurc(x, r), col=pal[7], lwd=2)
+abline(h=0, v=0, lwd=2)
+points(0, 0, pch=21, bg="white", cex=1.5)
+points(c(-fp, fp), c(0,0), pch=21, bg="black", cex=1.5)
+```
+
+## Hysteresis
+
+**Hysteresis**: the dependence of state of a system on its history. First coined in 1881 to describe the behavior of magnets carrying bits of their history, i.e. a magnet can have more than one magnetic moment in a magnetic field depending on how the magnetic field changed in the past. Plots of a single component of a moment often form a *loop* or a hysteresis curve, where there are **different values of one variable depending on the _direction of change of another variable_**.
+
+Often associated with *irreversible* thermodynamic change, such as **phase transitions**.
+
+**Etymology**: from Greek for "deficiency" or "lagging behind".
+
+*Examples of hysteresis*:
+
+- Hard disk memory
+- Remanence that retains memory of Earth's magnetic field history
+- Elastic bands (potential energy due to internal friction)
+- Lung exhalation vs. inhalation
+- Cell cycle: hysteresis-based oscillator
+- Circadian rhythms
+
+### Building a cell cycle oscillator: hysteresis and bistability in the activation of Cdc2
+
+https://www.nature.com/articles/ncb954
+
+"In summary, the Cdc2 activation system in Xenopus egg extracts is *bistable*: Cdc2 exhibits responses that are *temporally abrupt*, highly *switch-like* in **steady-state** terms, and, most importantly, characterized by biochemical hysteresis. The bistability of the mitotic trigger may allow the negative feedback loop of Cdc2 and the APC to exhibit *sustained oscillations* and function as a relaxation oscillator. These findings illustrate how two *biochemical circuit elements with distinctive properties* — a **bistable positive feedback system** (which alone behaves like a **toggle switch**) and a *negative feedback loop* (which alone behaves like an adaptational or *homeostatic mechanism*) — can combine to yield a <mark >third, distinct type of behaviour: the self-sustaining (non-dampening), spike-like oscillations of a relaxation oscillator</mark>.
+
+Comments from Schwem: ^WOW the above statements sound exactly like how GRN criticality allows for  robustness to perturbation and simultaneous ability to adapt (evolvability). Is GRN criticality just hysteresis in high-dimensional space?
+
+Bistability is one mechanism to ensure that a *biochemical oscillator* produces **sustained**, rather than damped, *oscillations.* As mentioned above, a *sufficiently long negative feedback loop* may still be able to produce sustained oscillations in the absence of bistability12,25. However, it seems that the combination of bistability and negative feedback may be a recurring motif in naturally occurring biological oscillators. For example, the mechanism that underlies the autonomous oscillations of *cardiac pacemaker cells* is analogous to the Cdc2 oscillator: the positive feedback in the opening of sodium channels corresponds to bistable activation of Cdc2 and the auto-inactivation of the sodium channel corresponds to APC-mediated cyclin degradation. *Intracellular calcium oscillations* have also been proposed to arise from combinations of bistability and negative feedback27. Several aspects of Saccharomyces cerevisiae cell cycle regulation seem to be driven by combinations of positive and negative feedback loops, and there appears to be hysteresis in accumulation of the B-type cyclin Clb2 in S. cerevesiae28, raising the possibility that the cell cycle includes multiple, inter-linked relaxation oscillators. A hysteresis-based oscillator may drive *circadian rhythms*15, with the comparatively slow pace of this oscillator arising out of its reliance on *transcriptional changes.* The fact that nature has converged on the same basic systems-level logic to produce oscillatory circuits out of very different types of signalling proteins in very different biological contexts argues that the <mark >positive feedback/negative feedback relaxation oscillator may be a particularly evolvable, reliable, or otherwise advantageous way of building biological clocks</mark>."
+
+Q from Schwem: Is *reentry* a form of hysteresis? The input can feed back onto itself before firing, generating an effectively instantaneous response.
+
+https://en.wikipedia.org/wiki/Hysteresis
+
+In *developmental biology*, cell type diversity is regulated by long range-acting signaling molecules called *morphogens* that pattern uniform pools of cells in a **concentration-** and **time-dependent** manner. The morphogen sonic hedgehog (Shh), for example, acts on limb bud and neural progenitors to induce expression of a set of homeodomain-containing transcription factors to subdivide these tissues into distinct domains. It has been shown that these tissues have a <mark >'memory'</mark> of previous exposure to Shh.[29] 
+
+Hysteresis is commonly examined in relation to **critical transitions** between ecosystem or community types in which dominant competitors or entire landscapes can change in a largely *irreversible* fashion.[36][37]
+
+_**Related terms:**_
+
+https://en.wikipedia.org/wiki/Nonholonomic_system
+
+- **Path dependence**
+- **Nonholonomic system**: system whose properties depend on the path taken
+  + Such a system is subject to parameters described by *differential constraints*, such that when the system evolves along a path in its *parameter space* but finally returns to the original set of parameter values at the start of the path, the system may not have returned to its initial state
+  + Must include *continuous closed circuit* in its governing parameter values (~hysteresis)
+  + Path integrals in *holonomic* systems depend only upon the *initial* and *final* states of the system (positions in the potential), completely *independent* of the trajectory of transition between those states. The system is therefore said to be *integrable*, while the *nonholonomic* system is said to be *nonintegrable.* When a path integral is computed in a nonholonomic system, the value represents a deviation within some range of admissible values and this *deviation* is said to be an **anholonomy** produced by the specific path under consideration. 
+  + The general character of anholonomic systems is that of *implicitly dependent parameters*. If the implicit dependency can be removed, for example by raising the dimension of the space, thereby adding at least one additional parameter, the system is not truly nonholonomic, but is simply incompletely modeled by the lower-dimensional space. In contrast, if the system intrinsically cannot be represented by independent coordinates (parameters), then it is truly an anholonomic system.
+  
+_**Contrast to:**_
+
+- **Markov property**: stochastic, *memoryless* property, e.g. Brownian motion
+  + This is a property that is assumed to hold in hidden Markov Models 
+
+
+## Bifurcation summary
+
+1. Saddle-node $x^2+r$
+2. Transcritical $rx-x^2$
+3. Pitchfork $x\pm x^3$
+  a. Supercritical $x-x^3$
+  b. Subcritical $x+x^3$
+
+

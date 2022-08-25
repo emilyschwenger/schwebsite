@@ -36,3 +36,27 @@ knitr::opts_chunk$set(echo = TRUE,
   **-Bertrand Russell**
 
 ![](mandelbrot_set.png)
+
+# Mathematics
+
+## Essence of calculus
+
+[Essence of Calculus](20220822_essence_of_calculus.html)
+
+## Differential Equations
+
+[Differential Equations](20220823_differential_equations.html)
+
+### Taylor Expansions
+
+[Taylor Expansions](20220816_taylor_expansions.html)
+
+## Non-Linear Dynamics and Chaos
+
+[ChaoOooOOooOoOoooS](20220816_non-linear_dynamics_and_chaos.html)
+
+### Lorenz Attractors
+
+[Lorenz Attractors](20220813_lorenz_attractors_chaos_theory.html)
+
+
