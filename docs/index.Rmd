@@ -1,0 +1,38 @@
+---
+title: "index"
+author: "Emily Schwenger"
+date: '2022-08-25'
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 6.5
+      fig_width: 10
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+# All Thingz Schwemz
+
+"So far as the theories of mathematics are about reality, they are not certain; so far as they are certain, they are not about reality."
+
+  **-Albert Einstein**
+
+"Calculus required continuity, and continuity required the idea of the infinitely little, but nobody could discover what the infinitely little might be." 
+
+  **-Bertrand Russell**
+
+![](mandelbrot_set.png)
