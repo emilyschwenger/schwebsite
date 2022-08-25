@@ -10,8 +10,8 @@ output:
       gallery: false
       highlight: tango
       df_print: kable
-      fig_height: 6.5
-      fig_width: 10
+      fig_height: 6
+      fig_width: 7.5
       css: custom.css
       toc_depth: 3
 editor_options: 
@@ -63,7 +63,7 @@ i\hslash\dfrac{\delta}{\delta t}|\psi\rangle=H|\psi\rangle
 
 ### Taylor Expansion, $cos(x)$
 
-```{r, include=FALSE}
+```{r, echo=FALSE}
 ## initiate x
 x <- seq(-10,10,by=0.2)
 
@@ -85,7 +85,6 @@ abline(h=0, col=pal[[n-1]], lwd=2)
 
 # 2nd derivative solution is -1
 abline(h=-1, col=pal[[n-2]], lwd=2)
-abline(a=0, b=-1, col=pal[[n-2]], lwd=2)
 
 # taylor expansion
 lines(x, (1-(0.5*x^2)), col=pal[[1]], lwd=2)
@@ -95,7 +94,7 @@ lines(x, (1-(0.5*x^2)+(1/24)*x^4), col=pal[[3]], lwd=2) # add 4th term, 1/24 b/c
 
 ### Fourier Transform, $\dfrac{cosn\pi x}{n}$
 
-```{r}
+```{r, echo=FALSE}
 # fourier_step <- function(x, n_iter) {
 #   odd_seq <- seq(1, (n_iter*2-1), by=2)
 #   for( i in 1:(n_iter-1) ) {
