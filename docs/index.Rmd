@@ -63,7 +63,7 @@ i\hslash\dfrac{\delta}{\delta t}|\psi\rangle=H|\psi\rangle
 
 ### Taylor Expansion, $cos(x)$
 
-```{r}
+```{r, include=FALSE}
 ## initiate x
 x <- seq(-10,10,by=0.2)
 
