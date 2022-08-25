@@ -1,5 +1,5 @@
 ---
-title: "Just Schwemily Thingz"
+title: "The Schwebsite"
 author: "Emily Schwenger"
 date: "`r Sys.Date()`"
 output: 
