@@ -1,0 +1,580 @@
+---
+title: "Differential Equations"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 6.5
+      fig_width: 10
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+Load libraries.
+
+```{r}
+suppressPackageStartupMessages( {
+  library(RColorBrewer)
+}
+)
+```
+
+Color palettes.
+
+```{r}
+pal <- brewer.pal(11, name="Spectral") 
+cl1 <- "navy"
+cl2 <- "peru"
+```
+
+# Introduction
+
+"Since Newton, mankind has come to realize that the laws of physics are always expressed in *the language of differential equations*." - Stevem Strogatz
+
+Ref.: https://www.youtube.com/playlist?list=PLZHQObOWTQDNPOjrT6KVlfJuKtYTftqH6
+
+Differential equations arise whenever it is easier to describe *change* than *absolute amounts*.
+
+1. **Ordinary differential equations (ODEs)**: single input
+  + E.g. $\ddot{\theta}(t)=-\mu \dot{\theta}(t) - \dfrac{g}{L}sin(\theta (t))$, function depends upon $t$ alone
+  + Finite collection of values changing with time
+2. **Partial differential equations (PDEs)**: multiple inputs
+  + E.g. $\dfrac{\delta T}{\delta t}(x, y, t) = \dfrac{\delta^2 T}{\delta x^2}(x, y, t) + \dfrac{\delta^2 T}{\delta y^2}(x, y, t)$, where the function depends on $x, y, t$.
+  + Can imagine them as a whole *continuum* of values changing with time, e.g. the velocity of a fluid at every point in space
+  
+Often, in higher order functions, you will see that the function's derivative are defined in terms of the function itself (e.g. 2-body problem).
+
+In physics, common to work with **Second-Order ODEs**.
+
+## E.g. Gravity
+  
+Can figure out a function based on information about its *rate of change*.
+
+Start with acceleration $\ddot{y}(t)=-g$ (1 degree of freedom). Integrate and get $\dot{y}(t)=-gt + v_0$ (2 degrees of freedom). Integrate again and position $y(t)=-\dfrac{1}{2}gt^2 + v_0t + y_0$.
+
+## E.g. Pendulum
+
+String of length $L$, angle $\theta$, arc $x=L\theta$, acceleration due to gravity force $a=\ddot{x}=-gsin\theta$. Let's perform a sanity check on this formula...
+
+```{r}
+sin(0) # 0 pendulum at lowest point so no g force
+sin(pi/2) # 90 degrees, pendulum in freefall
+```
+
+Since $x=L\theta$, $\ddot{\theta}=-\dfrac{g}{L}sin(\theta)$. Now add air resistance term which is proportional to the velocity $\ddot{\theta}=-\mu \dot{\theta(t)}-\dfrac{g}{L}sin(\theta(t))$.
+
+Common goal for solving DEs:
+
+1. Differential equation
+2. Solution
+3a. Understanding
+3b. Computation
+
+BUT the issue is that they are really freakin' hard to solve!!!
+
+INSTEAD skip (2) and go straight to making computations and building understanding from the equations alone! E.g. for pendulum example, start by visualizing *all possible states* (based on angle and angular velocity) in a 2-D plane. 
+
+**Phase plane analysis**: If we plot with $\theta$ as x-axis and $\dot{\theta}$ as y-axis, we can see how the state changes with all of the initial conditions of the pendulum, i.e. the *initial angle* and the *initial angular velocity* are sufficient in predicting *how the system evolves as time moves forward.*
+
+<mark >State space is abstract and distinct from the physical space in which the pendulum itself moves.</mark>
+
+Since we are modeling the pendulum as losing some energy to air resistance, the *trajectory spirals inward*, meaning the peak velocity and displacement each go down by a bit with each swing. Our point is *attracted to the origin*, where both $\theta$ and $\dot{\theta}$ both equal 0.
+
+While the first derivatives $\dfrac{\theta(t)}{\dot{\theta}(t)}$ are represented as points on the $\theta, \dot{\theta}$ __*plane*__, the 2nd derivatives $\dfrac{d}{dt}(\dfrac{\theta(t)}{\dot{\theta}(t)})=\dfrac{\dot{\theta}}{\ddot{\theta}}$ are represented as *arrows* on the plane.
+
+Note: The 1st derivative of our state vector is some function of the vector itself.
+
+<mark >Result: We have broken up a single second-order equation into a system of 2 first-order equations.</mark>
+
+  - Initial second-order eq.: $\ddot{\theta}(t)=-\mu \dot{\theta}(t) - (g/L)sin(\theta(t))$
+    + Note that it includes all three terms $\theta, \dot{\theta}, \ddot{\theta}$ hence "second-order"
+  - System of two first-order eqs.: $\dfrac{d}{dt}\binom{\theta(t)}{\dot{\theta}(t)}=\binom{\theta(t)}{-\mu \dot{\theta}(t) - (g/L)sin(\theta(t))}$
+    + Only $\theta, \dot{\theta}$
+
+## Phase plane analysis 
+
+### Phase plane analysis in `R`
+
+Ref.: https://www.magesblog.com/post/2014-11-04-phase-plane-analysis-in-r/
+
+Other sources: 
+
+- https://hluebbering.github.io/phase-planes/index.html
+
+- http://www.scholarpedia.org/article/Andronov-Hopf_bifurcation
+
+- `phaseR`: an R pkg for phase plane analysis of autonomous ODE systems
+  + chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://journal.r-project.org/archive/2014/RJ-2014-023/RJ-2014-023.pdf
+  
+- chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.dam.brown.edu/people/mumford/beyond/coursenotes/2006PartIIb.pdf
+
+**Fitz-Hugh-Nagamo system...**
+
+\begin{aligned}
+\dot{v}=&2 (w + v - \frac{1}{3}v^3) + I_0 \\\\\\
+\dot{w}=&\frac{1}{2}(1 - v - w)\\\\\\
+\end{aligned}
+
+\begin{aligned}
+\dot{v}=&2 (w + v - \frac{1}{3}v^3) + I_0 \\\\\\
+\dot{w}=&\frac{1}{2}(1 - v - w)\\\\\\
+\end{aligned}
+
+The FitzHugh-Nagumo system is a simplification of the Hodgkin-Huxley model of spike generation in squid giant axon. Here $I_0$ is a bifurcation parameter. As I decrease $I_0$ from 0 the system dynamics change (*Hopf-bifurcation*): a *stable equilibrium solution* transform into a *limit cycle*. Following Michael’s paper, I can use `phaseR` to plot the velocity field, add nullclines and plot trajectories from different starting points. Here I plot the FitzHugh-Nagumo system for four different parameters of $I_0$ and three different initial starting values. The blue line show the *nullcline* of $w$ i.e. $\dot{w}=0$, while the red line shows the nullcline of $v$. For $I_0=-2$ I can observe the limit cycle.
+
+```{r}
+library(phaseR)
+FHN <- function(t, y, parameters) {
+  I_0 <- parameters
+  dy <- numeric(2)
+  dy[1] <- 2 *  (y[2] + y[1] - 1/3 * y[1]^3) + I_0
+  dy[2] <- (1 - y[1] - y[2])/2   
+  return(list(dy))
+}
+
+phasePlot <- function(FHN, I_0=-1){
+  FHN.flowField  <- flowField(FHN, xlim = c(-3, 3), # changed to xlim and ylim
+                              ylim = c(-3, 3),
+                              xlab="v", ylab="w",
+                              main=paste0("I=", I_0),
+                              parameters = I_0, 
+                              points = 15, add = FALSE)  
+  FHN.nullclines <- nullclines(FHN, xlim = c(-3, 3), 
+                               ylim = c(-3, 3),
+                               parameters = I_0, 
+                               points = 500)  
+  y0 <- matrix(c(-2, -2, 0, 0, 0.5, 0.5), 
+               ncol = 2, nrow = 3, 
+               byrow = TRUE)  
+  FHN.trajectory <- trajectory(FHN, y0 = y0, tlim = c(0,500), # changed to tlim 
+                               parameters = I_0)
+}
+
+#op <- par(mfrow=c(2,2))
+phasePlot(FHN, I_0= 0)
+# phasePlot(FHN, I_0=-1)
+# phasePlot(FHN, I_0=-2)
+# phasePlot(FHN, I_0=-3)
+```
+
+### Phase plane analysis in `XPPAUT`
+
+Here is the ODE file for a damped pendulum provided by `xPPAut`, a GUI interface for solving and graphing differential equations.
+
+```
+# damped pendulum pend.ode
+dx/dt = xp
+dxp/dt = (-mu*xp-m*g*sin(x))/(m*l)
+pe=m*g*(1-cos(x))
+ke=.5*m*l*xp^2
+aux P.E.=pe
+aux K.E.=ke
+aux T.E=pe+ke
+# MKS units
+# 
+param m=10,mu=2,g=9.8,l=1
+param scale=0.0083333
+@ xp=x,yp=xp,xlo=-4,xhi=4,ylo=-8,yhi=8
+@ bounds=1000
+x(0)=2
+# click on numerics colorize color via T.e
+# choose min=0, max=400
+# click dir fld - colorize - grid=80
+# click on the slider and choose g, gravity start at 9.8, min=0,max=20
+# watch the energy landscape change as you move the slider!
+done
+```
+
+## Solve ODE in `python`
+
+```{python}
+## import libraries
+import numpy as np
+
+## physical constants
+g = 9.8
+L = 2
+mu = 0.1
+
+## initial conditions
+THETA_0 = np.pi/3 # 60 degrees
+THETA_DOT_0 = 0 # no initial angular velocity
+
+## define ODE
+def get_theta_double_dot(theta, theta_dot):
+    return -mu * theta_dot - (g/L) * np.sin(theta)
+
+## solve ODE
+def theta(t):
+  # initial conditions
+  theta = THETA_0
+  theta_dot = THETA_DOT_0
+  delta_t = 0.01 # time step
+  for time in np.arange(0, t, delta_t):
+    theta_double_dot = get_theta_double_dot(theta, theta_dot)
+    theta += theta_dot * delta_t # increase theta by theta_dot * delta_t
+    theta_dot += theta_double_dot * delta_t
+  return theta
+```
+
+# Partial Differential Equations
+
+Each derivative tells only *part* of the story of how the temperature function changes, hence the name "partial derivatives", e.g. *time* and *space* may be explicitly modeled.
+
+Q from Schwem: What is the difference between explicitly modeling time and having dimensionless ordinal data? 
+
+## E.g. Heat
+
+**Heat in 1D**:
+
+\begin{aligned}
+\dfrac{dT}{dt}(x,t)=\alpha \dfrac{d^2T}{dx^2}(x,t)
+\end{aligned}
+
+This tells us that they way heat changes with time depends on the way the heat changes in space.
+
+**Heat in 3D**:
+
+\begin{aligned}
+\dfrac{dT}{dt}(x,t) &= \alpha (\dfrac{d^2T}{dx^2}(x,t) + \dfrac{d^2T}{dy^2}(y,t) + \dfrac{d^2T}{dz^2}(z,t))\\
+&= \alpha (\triangledown^2T)
+\end{aligned}
+
+The upside-down triangle term $\triangledown^2T$ is called the <mark >Laplacian</mark>, and is essentially a *multivariable derivative*!!! Can also be though of as the *divergence of the gradient*. 
+
+Khan academy videos on Laplacian: 
+
+If we discretize time and only think about space as a line, we would get a situation in which the temperature at a point $T_2$ will change to match the *average* temperatures of its 2 adjacent points, $T_1,T_3$ until the whole system reaches a *fixed point* or *equilibrium,* as such...
+
+\begin{aligned}
+\dfrac{dT}{dt}&=\alpha (\dfrac{T_1+T_3}{2}-T_2)\\
+&=\dfrac{\alpha}{2}[(T_3-T_2)-(T_2-T_1)]\\
+&=\dfrac{\alpha}{2}[\Delta \Delta T_1]
+\end{aligned}
+
+"The temperature change of a given point is *proportional* to the **second difference** (i.e. the **2nd derivative** in continuous terms)."
+
+# Solving the Heat Equation
+
+Makes use of sine waves, which have the special property that is *the amount they curve is proportional to their height*. This has the peculiar effect that <mark >each point changes its temperature at a rate proportional to the change in temperature itself</mark>.
+
+This property is akin to taking derivatives of **exponentials**!!!
+
+REMEMBER: $\dfrac{d}{dt}(Ce^{-0.2t})=0.2Ce^{-0.2t}$
+
+In order to solve a PDE, you must satisfy 3 criteria:
+
+1. **The PDE**: $\dfrac{dT}{dt}(x,t)=\alpha \dfrac{d^2T}{dx^2}(x,t)$
+
+2. **The Boundary Condition**: Flat at boundary for all $t>0$
+  + Boundary = each end of rod
+  + $\dfrac{dT}{dx}(0, t)=\dfrac{dT}{dx}(L, t)=0$
+
+3. **Initial Conditions**
+
+
+# Fourier Transforms
+
+This video is INCREDIBLE: https://www.youtube.com/watch?v=r6sGWTCMz2k&list=PLZHQObOWTQDNPOjrT6KVlfJuKtYTftqH6&index=4&ab_channel=3Blue1Brown.
+
+Fourier transforms are useful for any process involved in breaking down complex functions and patterns as *combinations of simple oscillations*. It is difficult to overstate how profound this concept is.
+
+Q from Schwem: Is this because of string theory, i.e. tiny vibrations are at the core of  e v e r y t h i n g  ?!
+
+Interestingly, the heat equation is *linear*, i.e. if you know two solutions and you add them up, that sum is a new solution. 
+
+In the heat equation, higher frequency waves dissipate faster, such that lower frequency waves dominate over time.
+
+All the complexity in the evolution of this heat distribution that the heat equation implies is captured by this *difference in decay rates for the different pure frequency components*.
+
+BUT what the heck is going on?! In reality, the initial temperature distribution of two rods coming into contact would be more like a step/sigmoidal function than a sine wave. So how can we make the sine waves fit into reality, knowing that our reasons for using them are b/c the math of the derivatives is nice?
+
+The important question that Fourier asked was: <mark > How do you express any function as a sum of sine waves?!</mark> PLUS you have the added constraint of having to satisfy a certain *boundary condition*!!!
+
+The sine functions we will use will be of frequencies that are *whole number multiples* of some base frequency in order to satisfy our boundary condition of having slope=0 at either end of the rod, $0,L$.
+
+```{r, fig.height=6, fig.width=6}
+# fourier_step <- function(x, n_iter) {
+#   odd_seq <- seq(1, (n_iter*2-1), by=2)
+#   for( i in 1:(n_iter-1) ) {
+#     assign( paste0("fun_",i), cos(odd_seq[i]*pi*x)/odd_seq[i], envir = .GlobalEnv )
+#   }
+#   fun_all <- NULL
+#   # if i is odd, add
+#   n_odds <- odd_seq[c(TRUE,FALSE)]
+#   name_odds <- paste0("fun_", n_odds)
+#   vec_odds <- lapply(name_odds, get)
+#   # if i is even, subtract
+#   n_evens <- odd_seq[c(FALSE,TRUE)]
+#   name_evens <- paste0("fun_", n_evens)
+#   vec_evens <- lapply(name_evens, get)
+#   return(vec_evens)
+# }
+
+# fourier_step(2, 2)
+
+x <- seq(0, 1, length.out=1e3)
+par(font.lab = 2)
+plot(x, cos(1*pi*x)/1, type="l", lwd=3.1, col=pal[1], main="Fourier Transform on Fleek", ylab=expression(cos(n*pi*x)/n))
+abline(h=0, v=0, lwd=3)
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3), type="l", lwd=3, col=pal[2])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5), type="l", lwd=2.9, col=pal[3])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7), type="l", lwd=2.8, col=pal[4])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9), type="l", lwd=2.7, col=pal[5])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11), type="l", lwd=2.6, col=pal[6])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11)+(cos(13*pi*x)/13), type="l", lwd=2.5, col=pal[7])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11)+(cos(13*pi*x)/13)-(cos(15*pi*x)/15), type="l", lwd=2.4, col=pal[8])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11)+(cos(13*pi*x)/13)-(cos(15*pi*x)/15)+(cos(17*pi*x)/17), type="l", lwd=2.3, col=pal[9])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11)+(cos(13*pi*x)/13)-(cos(15*pi*x)/15)+(cos(17*pi*x)/17)-(cos(19*pi*x)/19), type="l", lwd=2.1, col=pal[10])
+lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*pi*x)/9)-(cos(11*pi*x)/11)+(cos(13*pi*x)/13)-(cos(15*pi*x)/15)+(cos(17*pi*x)/17)-(cos(19*pi*x)/19)+(cos(21*pi*x)/21), type="l", lwd=2, col=pal[11])
+
+```
+
+## Rotating vectors in constructing complex functions
+
+General formula: $c_ne^{n2\pi it}$, where:
+
+- $n$ is the frequency of rotation, i.e. if $n=1$ then $\dot{\theta}=e^{2\pi i t}$, i.e. the angular velocity is 1 full rotation per second.
+
+- $c_n$ is the magnitude by which the vector is multiplied
+  + $c_0$ represents a sort of *center of mass* for the full drawing (function). Let's see why this is...
+  
+Basically, the *average of a sum* = the *sum of the averages*,
+
+\begin{aligned}
+\mu&=\int_0^1f(t)dt \\
+&=\int_0^1 (... + c_{-1}e^{-1\cdot 2\pi it} + c_0e^{0 \cdot 2\pi it} + c_1e^{1\cdot 2\pi it} + ...)dt \\
+&=... + \int_0^1 c_{-1}e^{-1\cdot 2\pi it}dt + \int_0^1 c_0e^{0 \cdot 2\pi it}dt + \int_0^1 c_1e^{1\cdot 2\pi it}dt + ...
+\end{aligned}
+
+Since each of these vectors makes a whole rotation around 0 (i.e. an *integer* value), the average of *each* of them individually is just 0, i.e. $\int_0^1 c_{-1}e^{-1\cdot 2\pi it}dt=0$, so on and so forth, EXCEPT $\int_0^1 c_0e^{0 \cdot 2\pi it}dt=c_0$ which does an incomplete, non-integer rotation, hence its angular displacement ($\Delta$position) $\theta\neq0$; therefore, $\int_0^1 \sum_{n=j}^nc_{n}e^{n\cdot 2\pi it}=c_0$.
+
+$c_n=\int_0^1 e^{-n2\pi it}f(t)dt$  **(Eq. 1)**
+
+
+So what is the computer doing when d00d is making the animations?
+
+1. Treat path like complex function 
+  + `.svd` files do this for you
+  + Schwem side note: *is this how data compression works?*
+    - YES!!! This is exactly how JPEGs work, splitting up something into a bunch of sine waves, and then only storing the important ones.
+  
+2. Compute integral via equation (1) above to find $c_n$.
+
+Deeper idea: <mark >Exponential functions, including their generalization into complex numbers and matrices, play a very important role for differential equations, especially when it comes to linear equations.</mark>
+
+## Summary
+
+Ref.: https://www.jezzamon.com/fourier/index.html
+
+- Fourier transforms are things that let us take something and split it up into its frequencies
+- The frequencies tell us about some fundamental properties of the data we have
+- And can compress data by only storing the important frequencies
+- And we can also use them to make cool looking animations with a bunch of circles
+
+Ref.:
+
+https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/
+
+- What does the Fourier Transform do? Given a smoothie, it finds the recipe.
+- How? Run the smoothie through filters to extract each ingredient.
+- Why? Recipes are easier to analyze, compare, and modify than the smoothie itself.
+- How do we get the smoothie back? Blend the ingredients.
+
+Here's the "math English" version of the above:
+
+The Fourier Transform takes a *time-based pattern*, measures every possible cycle, and returns the overall "cycle recipe" (the amplitude, offset, & rotation speed for every cycle that was found).
+
+# Meaning of $e^{i\pi}$
+
+Exponentials of e are the *only* function in existence where the function itself equals its derivative, *i.e. your velocity at a given position is always equal to that position*. The farther away from 0 you are, the faster you move.
+
+Important point: multiplying by $i$ has the effect of rotating a function by 90 degrees, i.e. perpendicular-izing things. 
+
+So, at $t=0$ $e^{it}=1$ (vector of length 1 pointing in positive direction in x-axis) and $\dfrac{df}{dt}=i\cdot e^{it}$ is a vector pointing from the tip of the previous vector, (1,0), in the upwards 90 degree direction. Since the derivative of the original function is always multiplying by i, the velocity will always be *perpendicular* to the position, hence forming a circle. 
+
+# Raising $e$ to the power of a matrix, $e^{\mathbf{A}t}$
+
+Matrix exponents play a prominent role in quantum mechanics and Schrödinger's equation.
+
+Taylor series raised to power of a variable $x$:
+
+$e^x=x^0 + x^1 + \dfrac{1}{2}x^2 + \dfrac{1}{6}x^3 + \dfrac{1}{24}x^4 + ... + \dfrac{1}{n!}x^n= e\cdot e = 7.389$
+
+Taylor series raised to power of a matrix $\mathbf{A}$:
+
+$e^{\mathbf{A}}=\mathbf{A}^0 + \mathbf{A}^1 + \dfrac{1}{2}\mathbf{A}^2 + \dfrac{1}{6}\mathbf{A}^3 + \dfrac{1}{24}\mathbf{A}^4 + ... + \dfrac{1}{n!}\mathbf{A}^n=$ stable matrix.
+
+For $\mathbf{A}=(0,\pi,-\pi,0)\rightarrow (-1,0,0,-1)$, converging at the negative identity matrix, $-\mathbf{I}$.
+
+## E.g. On-again off-again romance
+
+The rate at which Juliet's love for Romeo changes is negative of Romeo's love for her. When Romeo is expressing cool disinterest, Juliet is infatuated. Romeo is the opposite. He mirrors Juliet's affection
+
+\begin{aligned}
+\dfrac{dx}{dt}&=-y(t)\\
+\dfrac{dy}{dt}&=x(t)
+\end{aligned}
+
+A slight change in one value, immediately influences the rate of change of the other. Hence the *system of differential equations*, and systems of equations point towards *linear algebra* and *matrices*.
+
+Represent x(t) and y(t) as a column vector:
+
+\begin{aligned}
+\begin{bmatrix}
+x(t)\\
+y(t)
+\end{bmatrix}
+&=
+\begin{bmatrix}
++4.98\\
+-0.47
+\end{bmatrix}\\\\
+
+\begin{bmatrix}
+x'(t)\\
+y'(t)
+\end{bmatrix}
+&=
+\begin{bmatrix}
+-y'(t)\\
+x'(t)
+\end{bmatrix}\\\\
+
+&=
+\begin{bmatrix}
+0 & -1\\
+1 & 0 
+\end{bmatrix}
+\begin{bmatrix}
+x(t)\\
+y(t)
+\end{bmatrix}
+
+\end{aligned}
+
+**General form**:
+
+\begin{aligned}
+\dfrac{d}{dt}\mathbf{\vec{v}}(t)=\mathbf{M\vec{v}}(t)
+\end{aligned}
+
+**90 degree rotation matrix:**
+
+\begin{aligned}
+\begin{bmatrix}
+0 & -1\\
+1 & 0 
+\end{bmatrix}
+\end{aligned}
+
+Distance/time=radius, i.e. the distance travelled is equal to one radium of arc length along that circle, i.e. it rotates at one radian per unit time. Full revolution = $2\pi$ units of time. 
+
+**General rotation matrix:**
+
+\begin{aligned}
+\begin{bmatrix}
+cos(t) & -sin(t)\\
+sin(t) & cos(t) 
+\end{bmatrix}
+\end{aligned}
+
+rotates by angle $t$.
+
+A reminder on vector transformations...
+
+```{r, fig.height=6, fig.width=6}
+# plot(NA, NA, type="l", xlim=c(-2,2), ylim=c(-2,2), xlab="x", ylab="y")
+# grid(nx = NULL, ny = NULL)
+# abline(h=0, v=0, lwd=3, col="grey")
+# 
+# # 1st column transforms the x vector 
+# arrows(x0=0, y0=0, x1=1, y1=0, lwd=3, col="red4")
+# arrows(x0=0, y0=0, x1=cos(1), y1=sin(1), lwd=3, lty=2, col="red4")
+# 
+# # 2nd column transforms the y vector
+# arrows(x0=0, y0=0, x1=0, y1=1, lwd=3, col="navy")
+# arrows(x0=0, y0=0, x1=-sin(1), y1=cos(1), lwd=3, lty=2, col="navy")
+# 
+# # add new gridlines
+# sapply( seq(-5, 5, by=sqrt(sin(1)^2+cos(1)^2)), function(a) abline( a=a, b=sin(1)/cos(1) ) )
+# sapply( seq(-10, 10, by=sqrt(sin(1)^2+cos(1)^2)), function(a) abline( a=a, b=-cos(1)/sin(1) ) )
+```
+
+1st row is differential equation, 2nd row is a general solution:
+\begin{aligned}
+\dfrac{d}{dt}x(t)&=0.3\cdot x(t)\\
+x(t)&=e^{0.3t}\cdot x_0
+\end{aligned}
+
+<mark >Do not think of the 2nd row as just a solution; rather, it is an exponential term acting on an initial condition.</mark>
+
+When working with matrices, the solution also looks like an *exponential term acting on a given initial condition*. But the exponential part, in that case, will produce a __*matrix*__ that changes with time, and the initial condition is a __*vector*__.
+
+For our Romeo and Juliet example, the claim is now:
+
+\begin{aligned}
+\begin{bmatrix}
+x(t)\\
+y(t)
+\end{bmatrix}
+
+&=e^{\mathbf{A}t}
+\begin{bmatrix}
+x_0 \\
+y_0
+\end{bmatrix}
+\end{aligned} where $\mathbf{A}$ is \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix} or 
+\begin{bmatrix}
+cos(t) & -sin(t) \\
+sin(t) & cos(t) 
+\end{bmatrix}, i.e. a rotation matrix times the initial condition.
+
+(REMEMBER: multiplying by $i$ also acts like a 90 degree rotation!!!)
+
+In essence, writing $e^\mathbf{A}$ is shorthand for the Taylor expansion, i.e. polynomial version.
+
+
+
+## Schrödinger equation $i\hslash\dfrac{\delta}{\delta t}|\psi\rangle=H|\psi\rangle$
+
+THe Schrödinger equation in all its glory:
+
+\begin{aligned}
+i\hslash\dfrac{\delta}{\delta t}|\psi\rangle=H|\psi\rangle
+\end{aligned}, where $|\psi\rangle$ is the *state* of the system as a *vector* (of important parameters such as *position* and *momentum*).
+
+\begin{aligned}
+\dfrac{\delta}{\delta t}|\psi\rangle=\dfrac{1}{i\hslash}H|\psi\rangle
+\end{aligned}, i.e. the rate at which the state vector of the system changes looks like a certain matrix $\dfrac{1}{i\hslash}H$ times itself. 
+
+(In reality, $|\psi\rangle$ can be a function... but, whatever, functions are really just infinite-dimensional vectors(?!?!?!), and $\dfrac{1}{i\hslash}H$ can be an operator).
+
+<mark >The $i$ in the Schrödinger equation communicates that the rate of change of a certain state is, in a sense, perpendicular to that state. Hence, things will OSCILLATE over time. </mark>
+
+Vector field example:
+
+\begin{aligned}
+\dfrac{d}{dt}\mathbf{v}(t)=M\mathbf{v}(t)
+\end{aligned}
+
+This tells us that a velocity of a state is entirely determined by its position.
+
