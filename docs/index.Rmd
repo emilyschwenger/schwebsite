@@ -37,6 +37,7 @@ suppressPackageStartupMessages( {
 
   **-Albert Einstein**
 
+I am an MD candidate turned MD/PhD candidate working on 
 
 
 ![](mandelbrot_set.png)
@@ -44,7 +45,7 @@ suppressPackageStartupMessages( {
 # Publications
 
 1.	Piszczatowski RT\*, __Schwenger E__\*, Sundaravel S, Stein CM, Liu Y, Stanley P, Verma A, Zheng D, Seidel RD, Almo SC, Townley RA, Bülow HE, Steidl U. A glycan-based approach to cell characterization and isolation: Hematopoiesis as a paradigm. J Exp Med. 2022 Nov 7;219(11):e20212552. doi: 10.1084/jem.20212552. Epub 2022 Sep 6. 
-*Authors contributed equally to this work
+_*Authors contributed equally to this work_
   
 2.	__Schwenger E__, Steidl U. An evolutionary approach to clonally complex hematologic disorders. Blood Cancer Discov. 2021 May;2(3):201-215. doi: 10.1158/2643-3230.BCD-20-0219. Epub 2021 Apr 15. 
 
@@ -53,6 +54,12 @@ suppressPackageStartupMessages( {
 4.	__Schwenger E__, Reddy VP, Moorthy G, Sharma P, Tomkinson H, Masson E, Vishwanathan K. Harnessing Meta-analysis to Refine an Oncology Patient Population for Physiology-Based Pharmacokinetic Modeling of Drugs. Clin Pharmacol Ther. 2018 Feb;103(2):271-280. doi: 10.1002/cpt.917. Epub 2017 Nov 20. 
 
 5.	Mbogning J, Pagé V, Burston J, __Schwenger E__, Fisher RP, Schwer B, Shuman S, Tanny JC. Functional interaction of Rpb1 and Spt5 C-terminal domains in co-transcriptional histone modification. Nucleic Acids Res. 2015 Nov 16;43(20):9766-75. doi: 10.1093/nar/gkv837. Epub 2015 Aug 14.
+
+## Figures
+
+![](force-directed_graph_paga.png)
+
+![](waddington.jpg){width=600px}
 
 
 
@@ -64,20 +71,13 @@ suppressPackageStartupMessages( {
 
 # Paintings
 
-“Art washes away from the soul the dust of everyday life.” -Pablo Picasso
+“Art washes away from the soul the dust of everyday life.”  __-Pablo Picasso__
 
 ![](IMG_0245.jpeg){width=400px} ![](IMG_0248.jpeg){width=400px}
 
 ![](IMG_0251.jpeg){width=400px} ![](IMG_0264.jpeg){width=400px}
 
 ![](IMG_3193.jpeg)
-
-
-# Places
-
-“Look deep into nature, and then you will understand everything better.” ― Albert Einstein
-
-
 
 
 # Notes
