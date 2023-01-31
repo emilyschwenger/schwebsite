@@ -25,19 +25,24 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE) 
 
 suppressPackageStartupMessages( {
+  library(ggplot2)
+  library(plotly)
   library(RColorBrewer)
+  library(tidyverse)
 } )
 ```
 
 # About ***"me"***
 
-## All Thingz Schwemz
-
-"So far as the theories of mathematics are about reality, they are not certain; so far as they are certain, they are not about reality."
+"Learn from yesterday, live for today, hope for tomorrow. The important thing is not to stop questioning."
 
   **-Albert Einstein**
 
-I am an MD candidate turned MD/PhD candidate working on 
+## Research Interests
+
+I am an MD/PhD candidate at the Albert Einstein College of Medicine studying clonal competition in cancers of the blood (a.k.a. hematopoietic system), specifically myelodysplastic syndromes (MDS) and acute myeloid leukemias. I am currently modeling the systems-level properties and dynamics of the hematopoietic system that determine clonal expansion in del(5q) MDS patients; in particular, how the extrinsic effects of T-cell killing due to neoantigenicity of mutations and available hematopoietic stem cell niche space contribute to net fitness of a given clone. 
+
+My long-term interests lie in studying the greater system mechanisms that ensure that disease-causing clonal evolution does *not* occur for most of life despite the constant onslaught of mutations and genotoxic exposures, rather than mitigating advanced and highly evolved disease. I can only hope to help humanity in some way, perhaps through bridging the gap between healthcare and computer science, focusing on applied machine learning in healthcare; or maybe through some unexpected path that emerges, working on diverse projects across a variety of domains but connected by common threads in systems biology, evolutionary theory, network analysis, or information theory.
 
 
 ![](mandelbrot_set.png)
@@ -60,13 +65,6 @@ _*Authors contributed equally to this work_
 ![](force-directed_graph_paga.png)
 
 ![](waddington.jpg){width=600px}
-
-
-
-# Professional Experience 
-
-
-# Lab Experience
 
 
 # Paintings
@@ -105,6 +103,121 @@ i\hslash\dfrac{\delta}{\delta t}|\psi\rangle=H|\psi\rangle
 \end{aligned}, where $|\psi\rangle$ is the *state* of the system as a *vector* (of important parameters such as *position* and *momentum*).
 
 ## Plots
+
+### Bifurcation plot $f(x)=rx(1-x)$
+
+```{r, echo=FALSE, message=FALSE}
+x_vec <- NULL
+iter_logit <- function(n, r, x0) {
+  x <- x0
+  ## iterate logistic function n times
+  for(i in 1:n) {
+    x1 <- r*x*(1-x)
+    x_vec[i] <- x1
+    x <- x1
+  }
+  x_vec <- c(x0, x_vec)
+  return(x_vec)
+}
+
+## plot overlapping curves
+n <- 1e3
+n_excl <- 200 # how many initial points to exclude before stability is reached
+#r <- 2.4
+
+rvals <- seq(from=0, to=4, by=0.01)
+mat_logit <- matrix(data=NA, nrow=n-n_excl, ncol=length(rvals))
+colnames(mat_logit) <- rvals
+for(i in 1:length(rvals)){
+  r <- rvals[i]
+  mat_logit[,i] <- iter_logit(n, r, 0.2)[-c(1:(n_excl+1))]
+}
+
+#mat_logit[1:5, 1:20]
+```
+
+```{r, fig.width=20, fig.height=10, echo=FALSE}
+## convert data to long format
+dat_long <- mat_logit %>% 
+  as_tibble() %>%
+  rownames_to_column("id") %>%
+  gather(conditions, values, -id) %>%
+  mutate(r=as.numeric(conditions))
+
+## plot
+ggplot(data=dat_long, aes(x=r, y=values)) +
+  geom_point(size=0.1, color="navy") +
+  ggtitle("Logistic map bifurcation plot") +
+  ylab("x") +
+  theme_classic()
+```
+
+### Lorenz attractor
+
+```{r, echo=FALSE}
+### function for lorenz attractor system of ODEs ###
+lorenz <- function(t_max, x0, y0, z0, sigma, rho, beta) {
+  ## initialize variables with seeds
+  x <- x0
+  y <- y0
+  z <- z0
+  
+  ## initialize vectors to add iterates
+  x_vec <- x
+  y_vec <- y
+  z_vec <- z
+  
+  ## time steps, need to be sufficiently small for smooth curve
+  dt <- 0.0001
+  t <- seq(from=0, to=t_max, by=dt)
+
+  for(i in 2:length(t)) {
+    ## calculate derivatives based on given differential equations
+    xdot <- sigma*(y-x)
+    ydot <- x*(rho-z)-y
+    zdot <- x*y-beta*z
+    
+    ## update n+1 with Euler's method (approximation)
+    # can also use Runge-Kutta here
+    x <- x+xdot*dt
+    y <- y+ydot*dt
+    z <- z+zdot*dt
+    
+    x_vec[i] <- x
+    y_vec[i] <- y
+    z_vec[i] <- z
+  }
+  # compile results into single dataframe
+  df <- data.frame("time"=t,
+                   "x"=x_vec, 
+                   "y"=y_vec,
+                   "z"=z_vec)
+  return(df)
+}
+
+### chaotic solution ###
+s <- 10
+r <- 30
+b <- 8/3
+
+res <- lorenz(t_max=15, x0=10, y0=10, z0=10,
+       sigma=s, rho=r, beta=b)
+
+# 3d plot
+scene = list(camera = list(eye = list(x = -1.25, y = 1.25, z = 1.25)))
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', #'lines+markers',
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        #colorscale = list(c(0,'#BA52ED'), c(1,'#FCB040'))
+        #marker = list(size = 3.5),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Lorenz attractor", scene = scene)
+
+```
+
 
 ### Taylor Expansion, $cos(x)$
 
@@ -189,7 +302,9 @@ lines(x, (cos(1*pi*x)/1)-(cos(3*pi*x)/3)+(cos(5*pi*x)/5)-(cos(7*pi*x)/7)+(cos(9*
 
 ## Non-Linear Dynamics and Chaos
 
-[ChaoOooOOooOoOoooS](20220816_non-linear_dynamics_and_chaos.html)
+[Dynamical Systems and Chaos](20221206_complexity_explorer_dynamical_systems_and_chaos.html)
+
+[Non-linear Dynamics and Chaos](20220816_non-linear_dynamics_and_chaos.html)
 
 ### Lorenz Attractors
 

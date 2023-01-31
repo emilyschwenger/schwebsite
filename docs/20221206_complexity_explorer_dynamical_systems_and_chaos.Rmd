@@ -1,0 +1,1209 @@
+---
+title: "Dynamical Systems and Chaos"
+author: "Emily Schwenger"
+date: "`r Sys.Date()`"
+output: 
+  rmdformats::readthedown:
+      self_contained: true
+      thumbnails: false
+      lightbox: true
+      gallery: false
+      highlight: tango
+      df_print: kable
+      fig_height: 5
+      fig_width: 5
+      css: custom.css
+      toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Setup 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE) 
+```
+
+## Load libraries
+
+```{r}
+suppressPackageStartupMessages( {
+  library(colorRamps)
+  library(RColorBrewer)
+  library(deSolve)
+  library(plotly)
+  library(rmutil) # runge-kutte method
+  library(tidyverse)
+  library(viridis)
+} )
+
+source("R/std_functions.R")
+```
+
+## Color palettes
+
+```{r}
+pal <- brewer.pal(11, name="Spectral") 
+cl1 <- "navy"
+cl2 <- "peru"
+```
+
+# I. Iterated functions
+
+## Background
+
+Dynamical systems and chaos: iteration part 3
+Ref.: https://www.youtube.com/watch?v=gSb0sB6VhQ8&list=PLF0b3ThojznQwpDEClMZmHssMsuPnQxZT&index=9&ab_channel=ComplexityExplorer
+
+Vocabulary:
+
+• Seed /initial condition = starting values of parameters
+• Itinerary/orbit = sequence of numbers after iteration
+• Time series plot
+• Dynamical system: a system that evolves in time according to a well-defined, unchanging rule
+• Iterated functions are a dynamical system
+• We are typically interested in understanding collections of orbits all at once
+• What types of behavior do we see in different types of dynamical systems?
+• A fixed point of a function f is a number that does not change when iterated
+
+
+## Fixed point equation
+
+$f(x)=x$
+
+$f(x)=\dfrac{1}{2}x-4$
+
+
+
+## Example $f(x)=\dfrac{1}{2}x−4$
+
+Find the fixed point.
+
+$f(x)=x$
+
+$\dfrac{1}{2}x-4=x$
+
+$-4=\dfrac{1}{2}x$
+
+$x=-8$
+
+
+```{r}
+## derivative, f'(x)
+my_fun <- function(x) {
+  y <- 0.5*x-4
+  return(y)
+}
+
+D( expression(0.5*x-4), 'x' ) # 0.5 (duh)
+
+## initialize params
+# number iterations
+n <- 10
+
+# how does the orbit/itinerary look if we start with x_0 of 2 (above fp)?
+x_init <- 2
+y <- NULL
+for(i in 1:n){
+  y0 <- my_fun(x_init)
+  y <- c(y, y0)
+  x_init <- y0
+}
+
+# what about x_0 below the fixed point -8?
+x_init <- -18
+y2 <- NULL
+for(i in 1:n){
+  y0 <- my_fun(x_init)
+  y2 <- c(y2, y0)
+  x_init <- y0
+}
+
+## plot
+x <- seq(1, n)
+plot(x, y, type = "l", col="navy", xlab="Time Series", ylab="f(x)", ylim=c(-12,-4), lwd=2)
+abline(h=-8, lty=2, lwd=2)
+lines(x, y2, lwd=2, col="red4")
+```
+## Homework
+
+### Advanced Q1
+
+Determine all fixed points for the function f(x) = √2x. Which fixed point(s) are stable and which are unstable? 
+
+### Advanced Q2
+
+Find all fixed points for the function f(x) = 2x. 3. Write a program or make a spreadsheet that will calculate orbits for the function f(x) = 2.5x(1 − x). What is the long-term behavior of seeds between 0 and 1 for this function?
+
+
+
+# II. Differential Equations 
+
+## Example $\dot{x}=x^2−1$
+
+Find fixed points and classify their stability.
+
+x2−1=(x+1)(x−1); therefore, x∗=+1,−1 (the fixed points). -1 is a stable fixed point and +1 is an unstable fixed point. The +1 fixed point will get repelled to +∞.
+
+Derivative is f′(x)=2x. X-intercepts are x2=1, so x=−1,1.
+
+```{r}
+## derivative, f'(x)
+D( expression(x^2-1), 'x' ) # 2x
+## 2 * x
+## plot
+x <- seq(-10, 10, by=0.2)
+plot(x, (x^2-1), type = "l", col="navy", xlim=c(-5,5), ylim=c(-5,5))
+abline(h=0, v=0, lwd=2)
+
+# stable fixed point(s)
+points(-1, 0, pch=21, bg="black", cex=1.5)
+
+# unstable fixed point(s)
+points(1, 0, pch=21, bg="white", cex=1.5)
+```
+
+## Euler's method
+
+Homework. Write function to solve heat dissipation equation $\dfrac{dT}{dt}=0.2(20-T)$.
+
+```{r}
+y_vec <- NULL
+euler_method <- function(y0, t_int) {
+  xdot <- 0.2*(20-y0)*t_int
+  y_new <- y0 + xdot
+  y_vec <- c(y_vec, y_new)
+  return(y_vec)
+}
+
+euler_method(5, 1)
+euler_method(8, 1)
+```
+
+## Runge-Kutta method
+
+Built-in functions for Runge-Kutte solution from `rmutil` package...
+
+```{r}
+fn <- function(y,x) (x*y-y^2)/x^2
+soln <- runge.kutta(fn,2,seq(1,3,by=1/128))
+## exact solution
+exact <- seq(1,3,by=1/128)/(0.5+log(seq(1,3,by=1/128)))
+rbind(soln, exact)
+```
+
+
+# III. Chaos and the Butterfly Effect
+
+## Logistic equation $f(x)=rx(1-x)$
+
+Simplest form: $f(P)=rP$
+
+In this case, populations would grow forever, to infinity, but we know that this does not occur due to resource limitations, so we expand to...
+
+$f(P)=rP(1-\dfrac{P}{A})$
+
+in which $A$ is the "annihilation population" at which the next year there will be no more rabbits. 
+
+Case 1: $P=A$. Show that all the rabbits die...
+
+$f(A)=rA(1-\dfrac{A}{A})=rA(1-1)=0$.
+
+Case 2: $P<<<A$. 
+
+$f(P)=rP(1-0)=rP$. In this case, the population is still in the exponential growth phase.
+
+Now let's simplify this a bit...
+
+$P_{n+1}=rP_n(1-\dfrac{P_n}{A})$. Divide both sides of the quation by $A$...
+
+$\dfrac{P_{n+1}}{A}=\dfrac{rP_n}{A}(1-\dfrac{P_n}{A})$, then replace $\dfrac{P}{A}$ with {x}...
+
+$x_{n+1}=rx_n(1-x_n)$. $x$ is population expressed as a *fraction of the annihilation population*.
+
+$f(x)=rx(1-x)=rx-rx^2$
+
+### Time series plots
+
+Example: $r=1.5, x_0=0.2$
+
+```{r}
+x_vec <- NULL
+iter_logit <- function(n, r, x0) {
+  x <- x0
+  ## iterate logistic function n times
+  for(i in 1:n) {
+    x1 <- r*x*(1-x)
+    x_vec[i] <- x1
+    x <- x1
+  }
+  x_vec <- c(x0, x_vec)
+  return(x_vec)
+}
+
+n <- 50
+r <- 1.5
+y <- iter_logit(50, r, 0.2)
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.1
+y <- iter_logit(50, r, 0.2)
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.3
+y <- iter_logit(50, r, 0.2)
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.5
+y <- iter_logit(50, r, 0.2)
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.7
+x <- 0.9
+y <- iter_logit(50, r, x)
+y
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.77
+y <- iter_logit(50, r, 0.2)
+y
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 3.838
+y <- iter_logit(50, r, 0.2)
+y
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+r <- 4
+y <- iter_logit(50, r, 0.2)
+y
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+```
+
+Now let's plot the difference for the chaotic regime, $r=4$, starting from two very similar initial conditions $x_0=2,2.1$
+
+```{r}
+## plot overlapping curves
+r <- 4
+y1 <- iter_logit(50, r, 0.2)
+y2 <- iter_logit(50, r, 0.21)
+plot(0:n, 
+     y, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+lines(0:n, y2, lwd=2, col="orange4")
+
+## plot difference
+plot(0:n, 
+     y1-y2, 
+     type = "l", 
+     lwd=2, 
+     col="red4",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+```
+
+Notice that the curves start close together but soon diverge such that they are essentially entirely uncorrelated.
+
+What about if the initiating conditions are *almost* identical, to the 5th decimal?
+
+```{r}
+## plot overlapping curves
+n <- 50
+r <- 4
+y1 <- iter_logit(n, r, 0.2)
+y2 <- iter_logit(n, r, 0.2000001)
+plot(0:n, 
+     y1, 
+     type = "l", 
+     lwd=2, 
+     col="navy",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+lines(0:n, y2, lwd=2, col="orange4")
+
+## plot difference
+plot(0:n, 
+     y1-y2, 
+     type = "l", 
+     lwd=2, 
+     col="red4",
+     main=paste0("Iterated Logistic Function, r=", r),
+     xlab="Time",
+     ylab="Normalized Population")
+
+hist(y1, breaks=20)
+hist(y2, breaks=20)
+```
+
+## Lorenz equations 
+
+$\dfrac{dx}{dt}=10(y-x)$
+
+$\dfrac{dy}{dt}=x(28-z)-y$
+
+$\dfrac{dz}{dt}=xy-\dfrac{8}{3}z$
+
+## Chaos defined
+
+A dynamical system is __*chaotic*__ if it meets the following criteria:
+
+1. The dynamical system is **deterministic**.
+
+2. The system's orbits are **bounded**, i.e. they cannot go off to $\infty$.
+
+3. The system's orbits are **aperiodic**, i.e. they never repeat.
+
+4. The system has **sensitive dependence on initial conditions**.
+
+### Shadowing lemma
+
+A *lemma* in mathematics is an intermediate step that is used to demonstrate some other important result. The shadowing lemme tells us that a computational result can still be true to the dynamical system despite computational error, in that the incorrect result is still a correct orbit of the system, despite not being the exact solution to the original initial conditions of interest.
+
+## Randomness?
+
+### Symbolic dynamics
+
+Let's symbolically represent our results from the logistic equation, binarizing the data on value 0.5.
+
+```{r}
+## plot overlapping curves
+n <- 1e4
+r <- 4
+y1 <- iter_logit(n, r, 0.2)
+y2 <- iter_logit(n, r, 0.2000001)
+
+hist(y1, breaks=20)
+hist(y2, breaks=20)
+
+ysym1 <- ifelse(y1>0.5, "H", "L")
+ysym2 <- ifelse(y2>0.5, "H", "L")
+table(ysym1)
+table(ysym2)
+```
+
+The results are very close to 50:50, or __random__. We can study the dynamics of the symbol sequence instead of the original orbit. __*Properties are the same for the symbol sequence as for the original orbit.*__
+
+- Fixed points would be the same.
+
+- If the system exhibits aperiodicity, the symbolic representation will as well.
+
+This is not obvious, because symbolic representation eliminated some **information**, i.e. we do not have the precise number and instead just a binary category. tl;dr we __course-grained__ the data.
+
+If the string of symbols is long enough, one can narrow down the number of possible initial conditions that would result in the exact order of H's and L's; therefore, the symbolic representation is sufficient in understanding the dynamical system if it is sufficiently long. __*The information in the symbol sequence is the same as the information in the initial conditions*__.
+
+Symbolic representations are a way to generate mathematic proofs in dynamical systems. 
+ES: Is the NK model an example of a symbolic representation?
+
+- **Generating partition**
+
+The logistic equation, when $r=4$, is *as random as a coin toss*. __*In fact, random number generators make use of chaotic deterministic functions in order to generate truly random numbers!!!*__
+
+### Chaotic determinism vs. randomness
+
+tl;dr Chaotic deterministic systems produce truly random results. The reason for this is that you need to know the input parameters to infinitely long decimal points to accurately predict the full sequence; therefore, the sequence is uncompressable.
+
+Stochastic systems can also produce random results. 
+
+Randomness can be thought of as **incompressibility**, i.e. there is no pattern to reduce the system n terms of information. You need the entire sequence.
+
+- For both the logistic equation when $r=4$ and the coin toss, all possible sequences of symbols occur with equal frequency.
+
+- If I gave you two long sequences, one generated by the logistic eq. and one by the coin toss, you would *not* be able to tell one from the other.
+
+There are infinitely more sequences of infinite length than there are algorithms; therefore, by definition, some infinite sequences must be truly random. In other words, the set of all algorithms is countable or finite, but the set of all infinite sequences is uncountable.
+
+- The number of sequences and the number of algorithms are both infinite.
+
+- However, there are infinitely many more sequences than algorithms (*different types of infinity*).
+
+
+### Lyapunov exponents
+
+Two initial conditions, $x_0$ and $y_0$.
+
+Distance: $D_0=|x_o-y_0|$.
+
+$D(t)=|x_t-y_t|$ = separation between orbits at time $t$.
+
+For many systems: $D(t)\approx D_02^{\lambda t}$, on average, for small $t$ and small $D_0$.
+
+$\lambda$ is the Lyapunov exponent:
+
+- $\lambda>0$: sensitive dependence on initial conditions (SDIC); larger $\lambda$ means greater sensitivity.
+
+- $\lambda<0$: no SDIC.
+
+```{r}
+lyapunov <- function(d0, lambda, t) {
+  le <- d0*2^(lambda*t)
+  return(le)
+}
+
+lyapunov(0.1, 1, 1)
+
+cum_dist <- cumsum(y1[1:50])
+cum_dist <- cumsum(abs(y1[1:50]-y2[1:50]))
+plot(0:49, cum_dist, type="l")
+```
+
+This doesn't look right. Should be exponential. Need to fix.
+
+# IV. Bifurcations: Part I
+
+## Logistic *differential* equation
+
+$\dfrac{dP}{dt}=rP \left ( 1-\dfrac{P}{K} \right )$, where:
+
+- $r$ is growth rate
+
+- $K$ is carrying capacity; in the same place as $A$ which meant the annihilation parameter for the iterated function; however, $K$ means somethng different.
+
+In the differential equation, time and population are *continuous*, whereas they were *discrete* for the iterated function. This difference gives rise to very different possibilities in ranges of behaviors.
+
+- In this e.g., cycles and chaos are possible for the logistic iterated function but *not* for the logistic differential equation since time is not explicitly modeled so it does not make sense to have oscillations in which the same value of $x$ can have different values of $\dot{x}$.
+
+Remember, the range of behaviors for one-order differential equations are kind of boring; they can:
+
+- increase or decrease to fixed points
+
+- increase or decrease to infinity
+
+
+## Logistic differential equation with harvest
+
+$\dfrac{dP}{dt}=rP \left ( 1-\dfrac{P}{K} \right )-h$, where:
+
+- $h$ = harvest rate; note that this term does *not* depend on population size (not necessarily realistic but a helpful model to think about trade-offs).
+
+
+## Bifurcation defined
+
+- *Bifurcation*: a sudden qualitative change in a dynamical system as a parameter is varied continuously; e.g. change in number of fixed points or change in stability of fixed points.
+
+## Hysteresis and path dependence
+
+$\dfrac{dx}{dt}=rx+x^3-x^5$
+
+# V. Bifurcations: Part II
+
+## Bifurcation plot $f(x)=rx(1-x)$
+
+Exercise: write code to generate your own bifurcation plot for the logistic map (iterated logistic equation) $x_{n+1}=rx_n(1-x_n)$.
+
+Generate data for 10,000 points, eliminating first 500 points to allow for convergence.
+
+```{r}
+## plot overlapping curves
+n <- 1e3
+n_excl <- 200 # how many initial points to exclude before stability is reached
+#r <- 2.4
+
+rvals <- seq(from=0, to=4, by=0.01)
+mat_logit <- matrix(data=NA, nrow=n-n_excl, ncol=length(rvals))
+colnames(mat_logit) <- rvals
+for(i in 1:length(rvals)){
+  r <- rvals[i]
+  mat_logit[,i] <- iter_logit(n, r, 0.2)[-c(1:(n_excl+1))]
+}
+
+mat_logit[1:5, 1:20]
+```
+
+
+
+```{r, fig.width=20, fig.height=10}
+## convert data to long format
+dat_long <- mat_logit %>% 
+  as_tibble() %>%
+  rownames_to_column("id") %>%
+  gather(conditions, values, -id) %>%
+  mutate(r=as.numeric(conditions))
+
+## plot
+ggplot(data=dat_long, aes(x=r, y=values)) +
+  geom_point(size=0.1, color="navy") +
+  ggtitle("Logistic map bifurcation plot") +
+  ylab("x") +
+  theme_publication()
+```
+
+## Iterated cubic equation $f(x)=rx^2(1-x)$
+
+```{r}
+x_vec <- NULL
+iter_cubic <- function(n, r, x0) {
+  x <- x0
+  ## iterate logistic function n times
+  for(i in 1:n) {
+    x1 <- r*x^2*(1-x)
+    x_vec[i] <- x1
+    x <- x1
+  }
+  x_vec <- c(x0, x_vec)
+  return(x_vec)
+}
+
+## NOTE: x0 needs to be >0.5 for cubic equation or else will sink to fixed point at 0
+# only one fixed point
+n <- 1e3
+r <- 5.3
+iter_cubic(n, r, 0.5)[1:50]
+
+# two fixed points
+n <- 1e3
+r <- 5.33
+iter_cubic(n, r, 0.5)[1:50]
+```
+
+## Bifurcation plot $f(x)=rx^2(1-x)$
+
+```{r, fig.width=20, fig.height=10}
+## plot overlapping curves
+n <- 1e3
+n_excl <- 200 # how many initial points to exclude before stability is reached
+x0 <- 0.5 
+
+rvals <- seq(from=0, to=6.5, by=0.01)
+mat_cubic <- matrix(data=NA, nrow=n-n_excl, ncol=length(rvals))
+colnames(mat_cubic) <- rvals
+for(i in 1:length(rvals)){
+  r <- rvals[i]
+  mat_cubic[,i] <- iter_cubic(n, r, x0)[-c(1:(n_excl+1))]
+}
+
+mat_cubic[1:5, 1:20]
+
+## convert data to long format
+dat_long <- mat_cubic %>% 
+  as_tibble() %>%
+  rownames_to_column("id") %>%
+  gather(conditions, values, -id) %>%
+  mutate(r=as.numeric(conditions))
+
+## plot
+ggplot(data=dat_long, aes(x=r, y=values)) +
+  geom_point(size=0.1, color="navy") +
+  ggtitle("Logistic map bifurcation plot") +
+  ylab("x") +
+  theme_publication()
+```
+
+
+# VI. Universality
+
+## Universality defined
+
+$\delta_n=\dfrac{\Delta_n}{\Delta_{n+1}} \rightarrow \delta$, where $\delta$ is *universal*. It has the same value 4.669201... for all iterated functions $f(x)$ that map an interval to itself and have a **single quadratic maximum**.
+
+There is a vast number of functions that meet this criteria. However, functions with multiple local maxima, functions with multiple maximum on a line (flat top), or functions with a pointed maximum do not fall under the category of single quadratic maximum. 
+
+This tells us that the precise details of the functions do not matter... there is something deep and overarching about the set of iterated functions with a single quadratic maximum! This is a relatively new result (1978, discovery of universality and chaos) by Mitchell Feigenbaum, and Charles Tressor and Pierre Coulé simultaneously. 
+
+In our populaiton growth example, $r$ represented a growth rate, but it could just as easily represented a difference in flow rate (dripping faucet) or difference in temperature. 
+
+The term "scale-free" is referring to constant scaling, like **Feigenbaum's constant** $\delta$ which is $=4.669$.
+
+## Renormalization
+
+- Renormalization is a technique in math and physics where one changes a length scale and then observes how other properties of the system change.
+
+- At some types of transitions there is a **fractal structure**: properties are independent of length.
+
+- This can be used to derive critical exponents such as $\delta$.
+
+- __*Renormalization also explains why some model details do not matter.*__
+
+
+# VII. Phase space
+
+## 2D Differential equations
+
+Not much chaos in this unit. Chaos is not possible for 2D ODEs. Poincare-Bendixson theorem: basically, you cannot have a 2D system that is both bounded and SDIC. Permitted behavior for 2D dynamical systems includes:
+
+- Stable fixed points
+
+- Unstable fixed points
+
+- Trend to infinity
+
+- Periodic behavior, a.k.a. oscillatory, limit cycles
+
+### Lotka-Volterra 
+
+2-dimensional ODEs, e.g. need to know *both* number of rabbits and number of foxes to know growth rate of foxes, rabbits. 
+
+$\dfrac{dR}{dt}=R-\dfrac{1}{4}RF$
+
+$\dfrac{dF}{dt}=0.2RF-0.6F$
+
+### Limit cycles 
+
+### van der Pol equations
+
+Cycles can be attracting, as opposed to fixed points. 
+
+## 2D Iterated functions
+
+### Hénon map 
+
+A 2D iterated function. *2D iterated functions can exhibit chaotic behavior*.
+
+$x_{n+1}=y_n + 1 -ax_n^2$
+
+$y_{n+1}=bx_n$
+
+Long-term behavior is simple periodic.
+
+```{r, fig.width=7.5, fig.height=10.5}
+### henon iterated function ###
+henon <- function(n, x0, y0, a, b) {
+  ## initialize with given seeds
+  x <- x0
+  y <- y0
+  
+  ## initialize vector to store results
+  x_vec <- x0
+  y_vec <- y0
+  
+  for(i in 2:n) {
+    ## compute results of henon map
+    x_vec[i] <- y+1-a*x^2
+    y_vec[i] <- b*x
+    
+    ## new x is x_n+1
+    x <- x_vec[i]
+    y <- y_vec[i]
+  }
+  ## return dataframe of results
+  df <- data.frame("n"=1:n,
+                   "x"=x_vec,
+                   "y"=y_vec)
+  return(df)
+}
+
+## henon map function usage
+n <- 100
+a <- 0.9
+b <- 0.3
+x0 <- 0.2
+y0 <- 0.4
+res <- henon(n, x0, y0, 
+             a=a, b=b)
+head(res)
+
+## plto time series
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+
+## phase plot
+library(viridis)
+#plot(res$x, res$y, type="l", lwd=1, col=viridis(n))
+plot(res$x, res$y, col=viridis(n))
+
+## example 2 (quiz)
+n <- 100
+a <- 0.2
+b <- 0.5
+x0 <- 0.2
+y0 <- 0.4
+res <- henon(n, x0, y0, 
+             a=a, b=b)
+head(res)
+
+## plot time series
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+
+## phase plot
+plot(res$x, res$y, col=viridis(n))
+
+
+## example 3 (quiz)
+n <- 100
+a <- 1.25
+b <- 0.3
+x0 <- 0.2
+y0 <- 0.4
+res <- henon(n, x0, y0, 
+             a=a, b=b)
+head(res)
+
+## plot time series
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+
+## phase plot
+plot(res$x, res$y, col=viridis(n))
+
+
+## example 4 (quiz)
+n <- 100
+a <- 1.4
+b <- 0.3
+x0 <- 0.2
+y0 <- 0.4
+res <- henon(n, x0, y0, 
+             a=a, b=b)
+head(res)
+
+## plot time series
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+
+## phase plot
+plot(res$x, res$y, col=viridis(n))
+
+```
+
+## 3D Differential equations
+
+## Lørenz equations 
+
+$\dfrac{dx}{dt}=\sigma(y-x)$
+
+$\dfrac{dy}{dt}=x(\rho - z)-y$
+
+$\dfrac{dz}{dt}=xy-\beta z$
+
+Let's initialize the system with $\sigma=10, \rho=160, \beta=8/3$.
+
+```{r}
+### function for lorenz attractor system of ODEs ###
+lorenz <- function(t_max, x0, y0, z0, sigma, rho, beta) {
+  ## initialize variables with seeds
+  x <- x0
+  y <- y0
+  z <- z0
+  
+  ## initialize vectors to add iterates
+  x_vec <- x
+  y_vec <- y
+  z_vec <- z
+  
+  ## time steps, need to be sufficiently small for smooth curve
+  dt <- 0.0001
+  t <- seq(from=0, to=t_max, by=dt)
+
+  for(i in 2:length(t)) {
+    ## calculate derivatives based on given differential equations
+    xdot <- sigma*(y-x)
+    ydot <- x*(rho-z)-y
+    zdot <- x*y-beta*z
+    
+    ## update n+1 with Euler's method (approximation)
+    # can also use Runge-Kutta here
+    x <- x+xdot*dt
+    y <- y+ydot*dt
+    z <- z+zdot*dt
+    
+    x_vec[i] <- x
+    y_vec[i] <- y
+    z_vec[i] <- z
+  }
+  # compile results into single dataframe
+  df <- data.frame("time"=t,
+                   "x"=x_vec, 
+                   "y"=y_vec,
+                   "z"=z_vec)
+  return(df)
+}
+```
+
+Examples.
+
+```{r}
+### example 1: fixed point solution ###
+s <- 10
+r <- 9
+b <- 8/3
+
+res <- lorenz(t_max=6, x0=10, y0=10, z0=10,
+       sigma=s, rho=r, beta=b)
+
+## plots
+# time series
+par(mfrow=c(3,1))
+plot(res$time, res$x, type="l", lwd=2, col="navy")
+plot(res$time, res$y, type="l", lwd=2, col="red4")
+plot(res$time, res$z, type="l", lwd=2, col="orange3")
+
+# x vs. y vs. z
+par(mfrow=c(3,1))
+plot(res$x, res$y, type="l", lwd=2, col="navy")
+plot(res$x, res$z, type="l", lwd=2, col="red4")
+plot(res$y, res$z, type="l", lwd=2, col="orange3")
+
+# 3d plot
+scene = list(camera = list(eye = list(x = -1.25, y = 1.25, z = 1.25)))
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', #'lines+markers',
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        #colorscale = list(c(0,'#BA52ED'), c(1,'#FCB040'))
+        #marker = list(size = 3.5),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Lorenz attractor", scene = scene)
+
+
+### example 2: oscillatory/periodic solution ###
+s <- 10
+r <- 160 
+b <- 8/3
+
+res <- lorenz(t_max=15, x0=10, y0=10, z0=10,
+       sigma=s, rho=r, beta=b)
+
+# time series
+par(mfrow=c(3,1))
+plot(res$time, res$x, type="l", lwd=2, col="navy")
+plot(res$time, res$y, type="l", lwd=2, col="red4")
+plot(res$time, res$z, type="l", lwd=2, col="orange3")
+
+# x vs. y vs. z
+par(mfrow=c(3,1))
+plot(res$x, res$y, type="l", lwd=2, col="navy")
+plot(res$x, res$z, type="l", lwd=2, col="red4")
+plot(res$y, res$z, type="l", lwd=2, col="orange3")
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', #'lines+markers',
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        #colorscale = list(c(0,'#BA52ED'), c(1,'#FCB040'))
+        #marker = list(size = 3.5),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Lorenz attractor", scene = scene)
+
+```
+
+# VIII. Strange attractors
+
+An **attractor** is a shape to which nearby points get pulled into. 
+
+Types of attractors:
+
+- Fixed points
+
+- Cycles, periods
+
+- Strange
+  + the motion on the attractor is *chaotic*
+
+Strange attactors are seemingly paradoxical: an attractor that itself is chaotic?! In a sense the chaos is *bounded* within the attractor. Once they are on the attractor shape, they bounce around chaotically, i.e. they are both stable and unstable; they combine order and disorder, predictability and unpredictability. 
+
+- Exact orbit is like the **weather**
+  + Unpredictable, short-term behavior
+
+- Overall attractor shape is like **climate**
+  + Long-term stability
+
+## Hénon attractor
+
+A type of **strange attractor**, or attractor that exhibits chaotic behavior.
+
+```{r}
+## plot time series
+# these were the initial conditions that Henon used (a=1.4, b=0.3)
+res <- henon(500, 0.2, 0.2, 1.4, 0.3)
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+plot(res$x, res$y, col=viridis(n))
+
+
+res <- henon(n=500, x0 = 0.2, y0 = 0.2, 
+             a = 1.22, b = 0.2)
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+plot(res$x, res$y, col=viridis(n))
+
+res <- henon(n=500, x0 = 0.2, y0 = 0.2, 
+             a = 1.2, b = 0.2)
+par(mfrow=c(3,1))
+plot(res$n, res$x, type="l", lwd=2, col="navy")
+plot(res$n, res$y, type="l", lwd=2, col="orange3")
+plot(res$x, res$y, col=viridis(n))
+```
+
+Check for chaotic behavior...
+
+```{r}
+## check for chaotic behavior by overlaying plots with very close initial conditions
+par(mfrow=c(2,1))
+res1 <- henon(50, 0.2, 0.2, 1.4, 0.3)
+res2 <- henon(50, 0.201, 0.201, 1.4, 0.3)
+plot(res1$n, res1$x, type="l", lwd=2, col="navy")
+lines(res2$n, res2$x, type="l", lwd=2, col="orange3")
+
+plot(res1$n, res1$y, type="l", lwd=2, col="navy")
+lines(res2$n, res2$y, type="l", lwd=2, col="orange3")
+```
+
+As we can see, the lines initially are well-correlated but become uncorrelated/chaotic after the 20th iteration.
+
+Weirdly, they come back in alignment at times. We saw this phenomenon in the logistic equation too. 
+
+If we zoom in on the boomerang line you will see that the line is itself a fractal. It has an incredibly intricate structure.
+
+## Lorenz attractor
+
+3D differential equation. Continuous, not iterated dynamical system.
+
+```{r}
+### chaotic solution ###
+s <- 10
+r <- 30
+b <- 8/3
+
+res <- lorenz(t_max=15, x0=10, y0=10, z0=10,
+       sigma=s, rho=r, beta=b)
+
+# time series
+par(mfrow=c(3,1))
+plot(res$time, res$x, type="l", lwd=2, col="navy")
+plot(res$time, res$y, type="l", lwd=2, col="red4")
+plot(res$time, res$z, type="l", lwd=2, col="orange3")
+
+# x vs. y vs. z
+par(mfrow=c(3,1))
+plot(res$x, res$y, type="l", lwd=2, col="navy")
+plot(res$x, res$z, type="l", lwd=2, col="red4")
+plot(res$y, res$z, type="l", lwd=2, col="orange3")
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', #'lines+markers',
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        #colorscale = list(c(0,'#BA52ED'), c(1,'#FCB040'))
+        #marker = list(size = 3.5),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Lorenz attractor", scene = scene)
+
+
+res <- lorenz(t_max=15, x0=10, y0=10, z0=10,
+       sigma=10, rho=25, beta=5)
+
+# time series
+par(mfrow=c(3,1))
+plot(res$time, res$x, type="l", lwd=2, col="navy")
+plot(res$time, res$y, type="l", lwd=2, col="red4")
+plot(res$time, res$z, type="l", lwd=2, col="orange3")
+
+# x vs. y vs. z
+par(mfrow=c(3,1))
+plot(res$x, res$y, type="l", lwd=2, col="navy")
+plot(res$x, res$z, type="l", lwd=2, col="red4")
+plot(res$y, res$z, type="l", lwd=2, col="orange3")
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', #'lines+markers',
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        #colorscale = list(c(0,'#BA52ED'), c(1,'#FCB040'))
+        #marker = list(size = 3.5),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Lorenz attractor", scene = scene)
+```
+
+
+## Stretching and folding
+
+Basically, points initially get farther apart but then return by folding back onto earlier points.
+
+- **Stretching**: creates the phenomenon of sensitive dependence to initial conditions (SDIC)
+
+- **Folding**: keeps orbits bounded
+
+### Rössler attractor
+
+$\dfrac{dx}{dt}=-y-z$
+
+$\dfrac{dy}{dt}=x+ay$
+
+$\dfrac{dz}{dt}=b+z(x-c)$
+
+
+```{r}
+### function for rossler attractor system of ODEs ###
+rossler <- function(t_max, x0, y0, z0, a, b, c) {
+  ## initialize variables with seeds
+  x <- x0
+  y <- y0
+  z <- z0
+  
+  ## initialize vectors to add iterates
+  x_vec <- x
+  y_vec <- y
+  z_vec <- z
+  
+  ## time step size, needs to be sufficiently small for accurate predictions
+  dt <- 0.001
+  t <- seq(from=0, to=t_max, by=dt)
+
+  for(i in 2:length(t)) {
+    ## calculate derivatives based on given differential equations
+    xdot <- -y-z
+    ydot <- x+a*y
+    zdot <- b+z*(x-c)
+    
+    ## update n+1 with Euler's method (approximation)
+    # can also use Runge-Kutta here
+    x <- x+xdot*dt
+    y <- y+ydot*dt
+    z <- z+zdot*dt
+    
+    x_vec[i] <- x
+    y_vec[i] <- y
+    z_vec[i] <- z
+  }
+  # compile results into single dataframe
+  df <- data.frame("time"=t,
+                   "x"=x_vec, 
+                   "y"=y_vec,
+                   "z"=z_vec)
+  return(df)
+}
+
+```
+
+
+
+```{r}
+a <- 0.432
+b <- 2
+c <- 4
+
+res <- rossler(t_max=500, x0=2, y0=2, z0=2,
+       a=a, b=b, c=c)
+
+# time series
+par(mfrow=c(3,1))
+plot(res$time, res$x, type="l", lwd=2, col="navy")
+plot(res$time, res$y, type="l", lwd=2, col="red4")
+plot(res$time, res$z, type="l", lwd=2, col="orange3")
+
+# x vs. y vs. z
+par(mfrow=c(3,1))
+plot(res$x, res$y, type="l", lwd=2, col="navy")
+plot(res$x, res$z, type="l", lwd=2, col="red4")
+plot(res$y, res$z, type="l", lwd=2, col="orange3")
+
+plot_ly(res, x = ~x, y = ~y, z = ~z, type = 'scatter3d', mode = 'lines', 
+        line = list(width = 6, color = ~time, colorscale = 'Viridis'),
+        color = ~time, 
+        colorscale = 'Greens', 
+        cmin = -20, 
+        cmax = 50) %>% 
+  layout(title = "Rossler attractor", scene = scene)
+```
+
+
+IX. Pattern formation
+
+## Diffusion
+
+A partial differential equation. 
+
+$u(x,y)$ = chemical concentration.
+
+$\dfrac{du}{dt}=D\nabla^2u$, where:
+
+- $D$ is the diffusion constant; different for different liquids and gases.
+
+- $\nabla^2u=\dfrac{d^2u}{dx^2} + \dfrac{d^2u}{dy^2}$, the **Laplacian**, or the sum of the second x and y derivatives; a function of the spatial distribution of the chemical, i.e. how does the concentration vary over space.
+
+At equilibrium, $\nabla^2u=0$. The most boring equation.
+
+
+## Reaction-diffusion
+
+Small fluctuations can get amplified, and you can end up with *stable spatial patterns* even though you are in a diffusive medium. Another example of simple dynamical systems having surprisingly complex outcomes. 
+
+$\dfrac{du}{dt}=A\nabla^2u + f(u,v)$
+
+$\dfrac{dv}{dt}=B\nabla^2u + g(u,v)$, with the latter terms being the **reaction** terms.
+
+This dynamical system is deterministic and local. 
+
+- $u$ = activator, e.g. rabbits
+
+- $v$ = inhibitor, slows down or inhibits u, e.g. foxes
+
+- $B>A$, i.e. the inhibitor diffuses faster than the activator
