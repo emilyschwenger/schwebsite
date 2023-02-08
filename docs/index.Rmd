@@ -44,10 +44,12 @@ I am an MD/PhD candidate at the Albert Einstein College of Medicine studying clo
 
 My long-term interests lie in studying the greater system mechanisms that ensure that disease-causing clonal evolution does *not* occur for most of life despite the constant onslaught of mutations and genotoxic exposures, rather than mitigating advanced and highly evolved disease. I can only hope to help humanity in some way, perhaps through bridging the gap between healthcare and computer science, focusing on applied machine learning in healthcare; or maybe through some unexpected path that emerges, working on diverse projects across a variety of domains but connected by common threads in systems biology, evolutionary theory, network analysis, or information theory.
 
+![](headshot_ASCPT1.jpg){width=300px}
+
+# Publications
 
 ![](mandelbrot_set.png)
 
-# Publications
 
 1.	Piszczatowski RT\*, __Schwenger E__\*, Sundaravel S, Stein CM, Liu Y, Stanley P, Verma A, Zheng D, Seidel RD, Almo SC, Townley RA, Bülow HE, Steidl U. A glycan-based approach to cell characterization and isolation: Hematopoiesis as a paradigm. J Exp Med. 2022 Nov 7;219(11):e20212552. doi: 10.1084/jem.20212552. Epub 2022 Sep 6. 
 _*Authors contributed equally to this work_
