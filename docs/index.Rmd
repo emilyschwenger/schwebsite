@@ -44,7 +44,7 @@ I am an MD/PhD candidate at the Albert Einstein College of Medicine studying clo
 
 My long-term interests lie in studying the greater system mechanisms that ensure that disease-causing clonal evolution does *not* occur for most of life despite the constant onslaught of mutations and genotoxic exposures, rather than mitigating advanced and highly evolved disease. I can only hope to help humanity in some way, perhaps through bridging the gap between healthcare and computer science, focusing on applied machine learning in healthcare; or maybe through some unexpected path that emerges, working on diverse projects across a variety of domains but connected by common threads in systems biology, evolutionary theory, network analysis, or information theory.
 
-![](headshot_ASCPT1.jpg){width=300px}
+![](_Schwenger_Emily_0613_USETHISONE.jpg){width=300px}
 
 # Publications
 
